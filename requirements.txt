@@ -1,0 +1,15 @@
+
+Flask
+Flask-MySQLdb
+xgboost
+lightgbm
+tensorflow
+numpy
+pandas
+scikit-learn
+reportlab
+
+cachelib
+flask_session
+joblib
+scikit-learn

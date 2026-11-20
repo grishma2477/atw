@@ -1,0 +1,353 @@
+:root {
+    --blue: #2563eb;
+    --blue-dark: #1d4ed8;
+    --ink: #172443;
+    --muted: #52627a;
+    --line: #dce4f0;
+    --surface: #fff;
+    --soft-blue: #edf3ff;
+}
+
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    background: #f6f7fb;
+    color: var(--ink);
+    font: 16px/1.55 system-ui, sans-serif;
+}
+
+[hidden] {
+    display: none !important;
+}
+
+:focus-visible {
+    outline: 3px solid var(--blue);
+    outline-offset: 3px;
+}
+
+.portal-header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--line);
+}
+
+.nav-shell {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px 24px;
+    max-width: 1200px;
+    margin: auto;
+    padding: 14px 24px;
+}
+
+.brand {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    min-height: 44px;
+    color: var(--ink);
+    font-size: 21px;
+    font-weight: 750;
+    text-decoration: none;
+}
+
+.brand img {
+    width: 36px;
+    height: 36px;
+    object-fit: contain;
+}
+
+.nav-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+}
+
+.nav-links a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    padding: 6px 12px;
+    border-radius: 9px;
+    color: var(--muted);
+    font-size: 14px;
+    font-weight: 650;
+    text-decoration: none;
+}
+
+.nav-links a:hover,
+.nav-links a[aria-current="page"] {
+    background: var(--soft-blue);
+    color: var(--blue-dark);
+}
+
+.nav-links .logout {
+    color: #b91c1c;
+}
+
+.portal-main {
+    width: min(1040px, calc(100% - 32px));
+    margin: 36px auto 56px;
+}
+
+.portal-hero {
+    padding: clamp(24px, 5vw, 44px);
+    border-radius: 20px;
+    background:
+        radial-gradient(ellipse at top right, #3067d3, transparent 62%),
+        linear-gradient(125deg, #173ba3, #1d4ed8);
+    color: white;
+    box-shadow: 0 12px 30px rgb(29 78 216 / 16%);
+}
+
+.portal-hero h1 {
+    margin: 0 0 6px;
+    font-size: clamp(28px, 5vw, 44px);
+    line-height: 1.15;
+    letter-spacing: -.035em;
+    overflow-wrap: anywhere;
+}
+
+.portal-hero p,
+.profile-reminder p {
+    margin: 0;
+}
+
+.profile-reminder {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 12px;
+    margin-top: 20px;
+    padding: 18px clamp(16px, 3vw, 24px);
+    border: 1px solid #c8d9fb;
+    border-left: 4px solid var(--blue);
+    border-radius: 14px;
+    background: var(--soft-blue);
+}
+
+.profile-reminder h2,
+.dashboard-actions h2,
+.panel h2 {
+    margin: 0 0 8px;
+    font-size: 21px;
+    line-height: 1.25;
+    letter-spacing: -.02em;
+}
+
+.profile-reminder p {
+    margin-bottom: 12px;
+    color: var(--muted);
+}
+
+.dismiss-button {
+    flex: 0 0 44px;
+    min-height: 44px;
+    padding: 0;
+    border: 0;
+    border-radius: 10px;
+    background: transparent;
+    color: var(--blue-dark);
+    font: inherit;
+    font-size: 26px;
+    cursor: pointer;
+}
+
+.dismiss-button:hover {
+    background: #dce8ff;
+}
+
+.dashboard-actions,
+.profile-form {
+    margin-top: 24px;
+}
+
+.action-grid,
+.field-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
+}
+
+.action-grid {
+    margin-top: 14px;
+}
+
+.action-card,
+.panel {
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    background: var(--surface);
+    box-shadow: 0 8px 22px rgb(23 36 67 / 5%);
+}
+
+.action-card {
+    display: grid;
+    grid-template-columns: 42px minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 12px;
+    min-width: 0;
+    padding: 18px;
+    color: var(--ink);
+    text-decoration: none;
+}
+
+.action-card:hover {
+    border-color: var(--blue);
+    background: #f8faff;
+}
+
+.action-card img {
+    width: 42px;
+    height: 42px;
+    padding: 6px;
+    border-radius: 10px;
+    background: var(--soft-blue);
+    object-fit: contain;
+}
+
+.action-title {
+    font-weight: 750;
+}
+
+.action-card p {
+    margin: 3px 0 0;
+    color: var(--muted);
+    font-size: 14px;
+}
+
+.action-arrow {
+    color: var(--blue-dark);
+    font-size: 20px;
+}
+
+.panel {
+    padding: clamp(18px, 4vw, 28px);
+}
+
+.panel h2 {
+    margin-bottom: 18px;
+}
+
+.field-wide {
+    grid-column: 1 / -1;
+}
+
+.field label {
+    display: block;
+    margin-bottom: 5px;
+    font-size: 14px;
+    font-weight: 700;
+}
+
+.optional {
+    color: var(--muted);
+    font-weight: 500;
+}
+
+.field input,
+.field select {
+    width: 100%;
+    min-height: 46px;
+    padding: 9px 12px;
+    border: 1px solid #a9b7cc;
+    border-radius: 10px;
+    background: var(--surface);
+    color: var(--ink);
+    font: inherit;
+}
+
+.field input[readonly] {
+    background: #f3f6fb;
+    color: var(--muted);
+}
+
+.profile-actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 12px;
+    margin-top: 18px;
+}
+
+.button {
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+    min-height: 46px;
+    padding: 9px 16px;
+    border: 1px solid transparent;
+    border-radius: 10px;
+    font: inherit;
+    font-weight: 700;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.button-primary {
+    background: var(--blue-dark);
+    color: white;
+}
+
+.button-primary:hover {
+    background: #1e40af;
+}
+
+.button-secondary {
+    border-color: var(--line);
+    background: var(--surface);
+    color: var(--ink);
+}
+
+.button-secondary:hover {
+    background: var(--soft-blue);
+}
+
+.notice {
+    margin: 18px 0 0;
+    padding: 12px 16px;
+    border: 1px solid;
+    border-left-width: 4px;
+    border-radius: 10px;
+    font-size: 15px;
+    font-weight: 600;
+}
+
+.notice.profile-success {
+    background: #f0fdf4;
+    border-color: #22c55e;
+    color: #166534;
+}
+
+.notice.profile-error {
+    background: #fef2f2;
+    border-color: #ef4444;
+    color: #991b1b;
+}
+
+@media (max-width: 640px) {
+    .nav-shell {
+        padding-inline: 16px;
+    }
+
+    .portal-main {
+        margin-top: 20px;
+        margin-bottom: 32px;
+    }
+
+    .action-grid,
+    .field-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .profile-actions .button {
+        flex: 1 1 180px;
+    }
+}

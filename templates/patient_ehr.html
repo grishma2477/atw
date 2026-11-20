@@ -1,0 +1,342 @@
+{% extends "patient_base.html" %}
+
+{% block title %}My EHR{% endblock %}
+
+{% block content %}
+<style>
+    .ehr-hero {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-between;
+        align-items: center;
+        gap: 18px 24px;
+    }
+
+    .ehr-hero .ehr-download {
+        background: var(--surface);
+        color: var(--blue-dark);
+    }
+
+    .ehr-hero .ehr-download:hover {
+        background: var(--soft-blue);
+    }
+
+    .ehr-panel {
+        margin-top: 20px;
+    }
+
+    .ehr-details {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 10px;
+        margin: 0;
+    }
+
+    .ehr-detail {
+        min-width: 0;
+        padding: 12px 14px;
+        border-radius: 12px;
+        background: #f5f8fd;
+    }
+
+    .ehr-detail dt {
+        color: var(--muted);
+        font-size: 14px;
+    }
+
+    .ehr-detail dd {
+        margin: 4px 0 0;
+        font-weight: 650;
+        overflow-wrap: anywhere;
+    }
+
+    .ehr-tabs {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        padding: 6px;
+        margin-top: 24px;
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        background: var(--surface);
+    }
+
+    .ehr-tabs a {
+        display: flex;
+        flex: 1 1 145px;
+        align-items: center;
+        justify-content: center;
+        min-height: 44px;
+        padding: 8px 12px;
+        border-radius: 9px;
+        color: var(--muted);
+        font-weight: 700;
+        text-align: center;
+        text-decoration: none;
+    }
+
+    .ehr-tabs a:hover {
+        background: var(--soft-blue);
+        color: var(--blue-dark);
+    }
+
+    .ehr-tabs a[aria-current="page"] {
+        background: var(--blue-dark);
+        color: white;
+    }
+
+    .ehr-section {
+        margin-top: 12px;
+        scroll-margin-top: 16px;
+    }
+
+    .ehr-section h2 {
+        margin-bottom: 8px;
+    }
+
+    .ehr-source,
+    .ehr-record-date {
+        margin: 0 0 14px;
+        color: var(--muted);
+        font-size: 14px;
+    }
+
+    .ehr-empty {
+        padding: 18px;
+        margin: 8px 0 0;
+        border: 1px dashed #a9b7cc;
+        border-radius: 12px;
+        background: #f8faff;
+        color: var(--muted);
+    }
+
+    .ehr-list {
+        display: grid;
+        gap: 8px;
+        padding-left: 22px;
+        margin: 10px 0 0;
+    }
+
+    .ehr-history>div+div {
+        margin-top: 20px;
+    }
+
+    .ehr-history h3,
+    .ehr-record h3 {
+        margin: 0 0 6px;
+        font-size: 17px;
+    }
+
+    .ehr-record {
+        padding: 16px;
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        background: #f8faff;
+    }
+
+    .ehr-record+.ehr-record {
+        margin-top: 12px;
+    }
+
+    .ehr-record-date {
+        margin-bottom: 0;
+    }
+
+    .ehr-record details {
+        margin-top: 10px;
+    }
+
+    .ehr-record summary {
+        color: var(--blue-dark);
+        font-weight: 650;
+        cursor: pointer;
+    }
+
+    @media (max-width: 650px) {
+        .ehr-details {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+    }
+
+    @media (max-width: 380px) {
+        .ehr-details {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+
+{% macro show_items(items, empty_message) %}
+{% if items %}
+<ul class="ehr-list">
+    {% for item in items %}
+    <li>{{ item }}</li>
+    {% endfor %}
+</ul>
+{% else %}
+<p class="ehr-empty">{{ empty_message }}</p>
+{% endif %}
+{% endmacro %}
+
+<header class="portal-hero ehr-hero">
+    <div>
+        <h1>My electronic health record</h1>
+        <p>Review your personal details and recorded assessment information.</p>
+    </div>
+
+    <a class="button ehr-download" href="{{ url_for('download_ehr') }}">
+        Download EHR PDF <span aria-hidden="true">↓</span>
+    </a>
+</header>
+
+<section class="panel ehr-panel" aria-labelledby="patient-heading">
+    <h2 id="patient-heading">Patient information</h2>
+
+    <dl class="ehr-details">
+        <div class="ehr-detail">
+            <dt>Name</dt>
+            <dd>{{ info.full_name or "Not provided" }}</dd>
+        </div>
+        <div class="ehr-detail">
+            <dt>Age</dt>
+            <dd>{{ (info.age ~ " years") if info.age else "Not provided" }}</dd>
+        </div>
+        <div class="ehr-detail">
+            <dt>Gender</dt>
+            <dd>{{ info.gender or "Not provided" }}</dd>
+        </div>
+        <div class="ehr-detail">
+            <dt>Blood type</dt>
+            <dd>{{ info.blood_type or "Not provided" }}</dd>
+        </div>
+        <div class="ehr-detail">
+            <dt>Email</dt>
+            <dd>{{ info.email or "Not provided" }}</dd>
+        </div>
+        <div class="ehr-detail">
+            <dt>Phone</dt>
+            <dd>{{ info.phone or "Not provided" }}</dd>
+        </div>
+    </dl>
+</section>
+
+<nav class="ehr-tabs" aria-label="Health record sections">
+    {% for key, label in tabs.items() %}
+    <a href="{{ url_for('patient_ehr', tab=key, _anchor='ehr-section') }}" {% if selected_tab==key %}aria-current="page"
+        {% endif %}>
+        {{ label }}
+    </a>
+    {% endfor %}
+</nav>
+
+<section class="panel ehr-section" id="ehr-section" aria-labelledby="ehr-heading">
+    <h2 id="ehr-heading">{{ tabs[selected_tab] }}</h2>
+
+    {% if selected_tab != "assessments" and assessments %}
+    <p class="ehr-source">From your most recent submitted questionnaire.</p>
+    {% endif %}
+
+    {% if selected_tab == "medications" %}
+    {{ show_items(medications, "No medication information recorded.") }}
+
+    {% elif selected_tab == "allergies" %}
+    {{ show_items(allergies, "No allergy information recorded.") }}
+
+    {% elif selected_tab == "history" %}
+    <div class="ehr-history">
+        <div>
+            <h3>Current medical conditions</h3>
+            {{ show_items(conditions, "No medical conditions recorded.") }}
+        </div>
+        <div>
+            <h3>Family history</h3>
+            {{ show_items(family_history, "No family history recorded.") }}
+        </div>
+    </div>
+
+    {% elif assessments %}
+        {% for assessment in assessments %}
+            {% set answers = assessment.form_data %}
+            {% set result = assessment.diag %}
+    
+    <article class="ehr-record">
+        <h3>Questionnaire submission</h3>
+        <p class="ehr-record-date">
+            {% if assessment.created_at %}
+            {{ assessment.created_at.strftime("%d %b %Y, %I:%M %p") }}
+            {% else %}
+            Date unavailable
+            {% endif %}
+        </p>
+    
+        {% if result %}
+        <details open>
+            <summary>Saved assessment output</summary>
+    
+            <dl class="ehr-details">
+                <div class="ehr-detail">
+                    <dt>Saved primary label</dt>
+                    <dd>{{ result.primary_diagnosis or "Not recorded" }}</dd>
+                </div>
+    
+                <div class="ehr-detail">
+                    <dt>Saved confidence value</dt>
+                    <dd>
+                        {% if result.diagnosis_confidence is defined
+                        and result.diagnosis_confidence is not none %}
+                        {{ result.diagnosis_confidence }}
+                        {% else %}
+                        Not recorded
+                        {% endif %}
+                    </dd>
+                </div>
+    
+                <div class="ehr-detail">
+                    <dt>Saved secondary labels</dt>
+                    <dd>
+                        {{ (result.secondary_diagnoses | join(", "))
+                        if result.secondary_diagnoses else "Not recorded" }}
+                    </dd>
+                </div>
+            </dl>
+    
+            {% if result.recommendations %}
+            <h4>Saved recommendations</h4>
+            <ul class="ehr-list">
+                {% for recommendation in result.recommendations %}
+                <li>{{ recommendation }}</li>
+                {% endfor %}
+            </ul>
+            {% endif %}
+        </details>
+        {% endif %}
+    
+        {% if answers %}
+        <details>
+            <summary>View recorded answers</summary>
+    
+            <dl class="ehr-details">
+                <div class="ehr-detail">
+                    <dt>Memory difficulties</dt>
+                    <dd>{{ (answers.memoryComplaints or "Not recorded") | capitalize }}</dd>
+                </div>
+    
+                <div class="ehr-detail">
+                    <dt>Speech difficulties</dt>
+                    <dd>{{ (answers.speechIssues or "Not recorded") | capitalize }}</dd>
+                </div>
+    
+                <div class="ehr-detail">
+                    <dt>Mood changes</dt>
+                    <dd>{{ answers.moodChanges or "Not recorded" }}</dd>
+                </div>
+            </dl>
+        </details>
+        {% endif %}
+    </article>
+    {% endfor %}
+
+    {% else %}
+    <p class="ehr-empty">No assessments have been submitted yet.</p>
+    {% endif %}
+</section>
+{% endblock %}

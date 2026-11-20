@@ -1,0 +1,84 @@
+{% extends "patient_base.html" %}
+
+{% block title %}My Profile{% endblock %}
+
+{% block content %}
+<header class="portal-hero">
+    <h1>My profile</h1>
+    <p>Review and update your personal details.</p>
+</header>
+
+{% for category, message in get_flashed_messages(
+with_categories=true,
+category_filter=["profile-success", "profile-error"]
+) %}
+<p class="notice {{ category }}" role="{{ 'alert' if category == 'profile-error' else 'status' }}">
+    {{ message }}
+</p>
+{% endfor %}
+
+<form class="profile-form" action="{{ url_for('update_profile') }}" method="POST">
+    <section class="panel" aria-labelledby="personal-heading">
+        <h2 id="personal-heading">Personal and contact details</h2>
+
+        <div class="field-grid">
+            <div class="field field-wide">
+                <label for="full_name">Full name</label>
+                <input id="full_name" name="full_name" type="text" value="{{ info.full_name or '' }}"
+                    autocomplete="name" required>
+            </div>
+
+            <div class="field">
+                <label for="email">Email address</label>
+                <input id="email" type="email" value="{{ info.email or '' }}" autocomplete="email" readonly>
+            </div>
+
+            <div class="field">
+                <label for="phone">Phone number <span class="optional">(optional)</span></label>
+                <input id="phone" name="phone" type="tel" value="{{ info.phone or '' }}" autocomplete="tel">
+            </div>
+
+            <div class="field">
+                <label for="age">Age in years</label>
+                <input id="age" name="age" type="number" inputmode="numeric" min="1" max="120" step="1"
+                    value="{{ info.age if info.age is not none else '' }}" required>
+            </div>
+
+            <div class="field">
+                <label for="gender">Gender</label>
+                <select id="gender" name="gender" required>
+                    <option value="" disabled {% if info.gender not in genders %}selected{% endif %}>
+                        Select gender
+                    </option>
+                    {% for gender in genders %}
+                    <option value="{{ gender }}" {% if info.gender==gender %}selected{% endif %}>
+                        {{ gender }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="field">
+                <label for="blood_type">Blood type</label>
+                <select id="blood_type" name="blood_type" required>
+                    <option value="" disabled {% if info.blood_type not in blood_types %}selected{% endif %}>
+                        Select blood type
+                    </option>
+                    {% for blood_type in blood_types %}
+                    <option value="{{ blood_type }}" {% if info.blood_type==blood_type %}selected{% endif %}>
+                        {{ blood_type }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+    </section>
+
+    <div class="profile-actions">
+        <a class="button button-secondary" href="{{ url_for('patient_dashboard') }}">
+            Back to dashboard
+        </a>
+        <button class="button button-primary" type="submit">Save changes</button>
+    </div>
+</form>
+{% endblock %}

@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>OASIS model demo - NeuroSense</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/patient_portal.css') }}">
+</head>
+
+<body>
+    <header class="portal-header">
+        <div class="nav-shell">
+            <a class="brand" href="{{ url_for('doctor_dashboard') }}">
+                <img src="{{ url_for('static', filename='logo.png') }}" alt="">
+                <span>NeuroSense</span>
+            </a>
+
+            <nav class="nav-links" aria-label="Doctor navigation">
+                <a href="{{ url_for('doctor_diagnostics_page') }}">Diagnostics</a>
+            </nav>
+        </div>
+    </header>
+
+    <main class="portal-main">
+        <header class="portal-hero">
+            <h1>OASIS model demo</h1>
+            <p>Run the dementia-related classifier on a de-identified research example.</p>
+        </header>
+
+        {% if error %}
+        <p class="notice profile-error" role="alert">{{ error }}</p>
+        {% endif %}
+
+        <form class="profile-form" method="post" action="{{ url_for('doctor_oasis') }}">
+            <section class="panel" aria-labelledby="inputs-heading">
+                <h2 id="inputs-heading">Model inputs</h2>
+                <p>Use a held-out OASIS row with all seven fields populated. Enter the values in their original dataset
+                    units.</p>
+
+                <div class="field-grid">
+                    {% for feature in features %}
+                    <div class="field">
+                        <label for="oasis-{{ feature }}">
+                            {{ "Sex (training encoding)" if feature == "Sex" else feature }}
+                        </label>
+
+                        {% if feature == "Sex" %}
+                        <select id="oasis-Sex" name="Sex" required>
+                            <option value="">Select a code</option>
+                            <option value="0" {% if values.get("Sex")=="0" %}selected{% endif %}>
+                                0 — F
+                            </option>
+                            <option value="1" {% if values.get("Sex")=="1" %}selected{% endif %}>
+                                1 — M
+                            </option>
+                        </select>
+                        {% else %}
+                        <input id="oasis-{{ feature }}" name="{{ feature }}" type="number" step="any" {% if
+                            feature=="MMSE" %}min="0" max="30" {% endif %} value="{{ values.get(feature, '') }}"
+                            required>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                </div>
+            </section>
+
+            <div class="profile-actions">
+                <a class="button button-secondary" href="{{ url_for('doctor_diagnostics_page') }}">Back to
+                    diagnostics</a>
+                <button class="button button-primary" type="submit">Run OASIS model</button>
+            </div>
+        </form>
+
+        {% if score is not none %}
+        <section class="panel profile-form" aria-labelledby="result-heading">
+            <h2 id="result-heading">OASIS model result</h2>
+            <p><strong>Positive-class score:</strong> {{ "%.4f" | format(score) }}</p>
+            <p>This score refers to the dementia-related label used in training.
+                Its scale runs from 0 to 1.</p>
+        </section>
+        {% endif %}
+    </main>
+</body>
+
+</html>

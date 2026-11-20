@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Lifestyle &amp; Behavioral Factors - NeuroSense</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+
+    <style>
+        body.ns-lifestyle {
+            --ns-blue: #2563eb;
+            --ns-blue-dark: #1d4ed8;
+            --ns-ink: #172443;
+            --ns-muted: #52627a;
+            --ns-line: #dce4f0;
+            --ns-control-line: #a9b7cc;
+            --ns-white: #fff;
+            --ns-soft-blue: #edf3ff;
+
+            margin: 0;
+            background: #f6f7fb;
+            color: var(--ns-ink);
+            font: 16px/1.55 system-ui, sans-serif;
+        }
+
+        .ns-lifestyle *,
+        .ns-lifestyle *::before,
+        .ns-lifestyle *::after {
+            box-sizing: border-box;
+        }
+
+        .ns-lifestyle [hidden] {
+            display: none;
+        }
+
+        .ns-lifestyle :focus-visible {
+            outline: 3px solid var(--ns-blue);
+            outline-offset: 3px;
+        }
+
+        /* Patient navigation */
+        .ns-lifestyle .ns-topbar {
+            background: var(--ns-white);
+            border-bottom: 1px solid var(--ns-line);
+        }
+
+        .ns-lifestyle .ns-nav {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px 24px;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 14px 24px;
+        }
+
+        .ns-lifestyle .ns-brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 21px;
+            font-weight: 750;
+        }
+
+        .ns-lifestyle .ns-brand img {
+            width: 36px;
+            height: 36px;
+            object-fit: contain;
+        }
+
+        .ns-lifestyle .ns-links {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+        }
+
+        .ns-lifestyle .ns-links a {
+            display: inline-flex;
+            align-items: center;
+            min-height: 44px;
+            padding: 6px 12px;
+            border-radius: 9px;
+            color: var(--ns-muted);
+            font-size: 14px;
+            font-weight: 650;
+            text-decoration: none;
+        }
+
+        .ns-lifestyle .ns-links a:hover,
+        .ns-lifestyle .ns-links a[aria-current="location"] {
+            color: var(--ns-blue-dark);
+            background: var(--ns-soft-blue);
+        }
+
+        /* Assessment header */
+        .ns-lifestyle .ns-main {
+            width: min(960px, calc(100% - 32px));
+            margin: 36px auto 56px;
+        }
+
+        .ns-lifestyle .ns-hero {
+            padding: clamp(22px, 4vw, 36px);
+            border-radius: 20px;
+            color: var(--ns-white);
+            background:
+                radial-gradient(ellipse at top right, #3067d3, transparent 62%),
+                linear-gradient(125deg, #173ba3, #1d4ed8);
+            box-shadow: 0 12px 30px rgb(29 78 216 / 16%);
+        }
+
+        .ns-lifestyle .ns-step {
+            margin: 0;
+            color: inherit;
+            font-size: 14px;
+            font-weight: 700;
+        }
+
+        .ns-lifestyle .ns-hero h1 {
+            margin: 5px 0 8px;
+            color: inherit;
+            font-size: clamp(27px, 4vw, 42px);
+            line-height: 1.15;
+            letter-spacing: -.035em;
+        }
+
+        .ns-lifestyle .ns-hero-note {
+            margin: 0;
+            color: inherit;
+        }
+
+        .ns-lifestyle .ns-progress {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 8px;
+            margin-top: 22px;
+        }
+
+        .ns-lifestyle .ns-progress span {
+            height: 5px;
+            border-radius: 999px;
+            background: rgb(255 255 255 / 35%);
+        }
+
+        .ns-lifestyle .ns-progress span:nth-child(-n + 3) {
+            background: var(--ns-white);
+        }
+
+        /* Form cards */
+        .ns-lifestyle .ns-form {
+            display: grid;
+            gap: 16px;
+            margin-top: 20px;
+        }
+
+        .ns-lifestyle .ns-card {
+            min-width: 0;
+            padding: clamp(18px, 3vw, 28px);
+            border: 1px solid var(--ns-line);
+            border-radius: 18px;
+            background: var(--ns-white);
+            box-shadow: 0 8px 24px rgb(23 36 67 / 5%);
+        }
+
+        .ns-lifestyle .ns-card h2 {
+            margin: 0 0 16px;
+            color: var(--ns-ink);
+            font-size: 21px;
+            line-height: 1.25;
+            letter-spacing: -.02em;
+        }
+
+        .ns-lifestyle .ns-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 16px 20px;
+        }
+
+        .ns-lifestyle .ns-field {
+            min-width: 0;
+        }
+
+        .ns-lifestyle .ns-field label {
+            display: block;
+            margin: 0 0 6px;
+            color: var(--ns-ink);
+            font-size: 14px;
+            font-weight: 700;
+        }
+
+        .ns-lifestyle .ns-control {
+            display: block;
+            width: 100%;
+            min-height: 46px;
+            padding: 9px 12px;
+            border: 1px solid var(--ns-control-line);
+            border-radius: 10px;
+            background: var(--ns-white);
+            color: var(--ns-ink);
+            font: inherit;
+        }
+
+        .ns-lifestyle .ns-control:hover {
+            border-color: var(--ns-blue);
+        }
+
+        /* Alcohol input */
+        .ns-lifestyle .ns-alcohol {
+            grid-column: 1 / -1;
+            padding: 15px 16px;
+            border: 1px solid #dbe7ff;
+            border-radius: 12px;
+            background: #f3f7ff;
+        }
+
+        .ns-lifestyle .ns-hint {
+            margin: 8px 0 0;
+            color: var(--ns-muted);
+            font-size: 14px;
+        }
+
+        .ns-lifestyle .ns-stepper {
+            display: grid;
+            grid-template-columns: auto minmax(56px, 90px) auto;
+            justify-content: start;
+            gap: 8px;
+        }
+
+        .ns-lifestyle .ns-stepper .ns-control {
+            padding-inline: 8px;
+            text-align: center;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .ns-lifestyle .ns-stepper-button {
+            width: 46px;
+            min-height: 46px;
+            padding: 0;
+            border: 1px solid var(--ns-control-line);
+            border-radius: 10px;
+            background: var(--ns-white);
+            color: var(--ns-blue-dark);
+            font: inherit;
+            font-size: 22px;
+            line-height: 1;
+            cursor: pointer;
+        }
+
+        .ns-lifestyle .ns-stepper-button:hover {
+            border-color: var(--ns-blue);
+            background: var(--ns-soft-blue);
+        }
+
+        .ns-lifestyle .ns-stepper-button[aria-disabled="true"] {
+            border-color: var(--ns-line);
+            background: #f6f7fb;
+            color: var(--ns-muted);
+            cursor: default;
+        }
+
+        /* Assessment actions */
+        .ns-lifestyle .ns-actions {
+            display: flex;
+            justify-content: space-between;
+            gap: 12px;
+            margin-top: 4px;
+        }
+
+        .ns-lifestyle .ns-button {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            min-height: 48px;
+            padding: 10px 20px;
+            border: 1px solid transparent;
+            border-radius: 10px;
+            font: inherit;
+            font-weight: 700;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        .ns-lifestyle .ns-previous {
+            border-color: var(--ns-line);
+            background: var(--ns-white);
+            color: var(--ns-ink);
+        }
+
+        .ns-lifestyle .ns-previous:hover {
+            border-color: var(--ns-control-line);
+            background: var(--ns-soft-blue);
+        }
+
+        .ns-lifestyle .ns-next {
+            background: var(--ns-blue-dark);
+            color: var(--ns-white);
+        }
+
+        .ns-lifestyle .ns-next:hover {
+            background: #1e40af;
+        }
+
+        @media (max-width: 600px) {
+            .ns-lifestyle .ns-nav {
+                padding-inline: 16px;
+            }
+
+            .ns-lifestyle .ns-main {
+                margin-top: 20px;
+                margin-bottom: 32px;
+            }
+
+            .ns-lifestyle .ns-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .ns-lifestyle .ns-actions {
+                display: grid;
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+
+            .ns-lifestyle .ns-button {
+                padding-inline: 10px;
+            }
+        }
+    </style>
+</head>
+
+{% macro select_field(name, label, placeholder, choices) %}
+<div class="ns-field">
+    <label for="{{ name }}">{{ label }}</label>
+    <select class="ns-control" id="{{ name }}" name="{{ name }}">
+        <option>{{ placeholder }}</option>
+        {% for value, text in choices %}
+        <option value="{{ value }}">{{ text }}</option>
+        {% endfor %}
+    </select>
+</div>
+{% endmacro %}
+
+<body class="ns-lifestyle">
+    <header class="ns-topbar">
+        <div class="ns-nav">
+            <div class="ns-brand">
+                <img src="{{ url_for('static', filename='logo.png') }}" alt="">
+                <span>NeuroSense</span>
+            </div>
+
+            <nav class="ns-links" aria-label="Patient navigation">
+                <a href="patient_dashboard">Dashboard</a>
+                <a href="assessment" aria-current="location">Start Assessment</a>
+                <a href="timeline">Health Timeline</a>
+                <a href="ehr">My EHR</a>
+                <a href="patient_profile">My Profile</a>
+            </nav>
+        </div>
+    </header>
+
+    <main class="ns-main">
+        <header class="ns-hero">
+            <p class="ns-step">Step 3 of 4</p>
+            <h1>Lifestyle &amp; Behavioral Factors</h1>
+            <p class="ns-hero-note">Think about what a typical week looks like for you.</p>
+
+            <div class="ns-progress" aria-hidden="true">
+                <span></span>
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </header>
+
+        <form class="ns-form" method="POST">
+            <section class="ns-card" aria-labelledby="activity-heading">
+                <h2 id="activity-heading">Activity and sleep</h2>
+
+                <div class="ns-grid">
+                    {{ select_field(
+                    "physicalActivity", "Physical activity level", "Select",
+                    [
+                    ("sedentary", "Sedentary"),
+                    ("light", "Light"),
+                    ("moderate", "Moderate"),
+                    ("active", "Active")
+                    ]
+                    ) }}
+
+                    {{ select_field(
+                    "sleepQuality", "Sleep quality", "Select sleep quality",
+                    [
+                    ("poor", "Poor"),
+                    ("fair", "Fair"),
+                    ("good", "Good"),
+                    ("excellent", "Excellent")
+                    ]
+                    ) }}
+                </div>
+            </section>
+
+            <section class="ns-card" aria-labelledby="diet-heading">
+                <h2 id="diet-heading">Diet and drinks</h2>
+
+                <div class="ns-grid">
+                    {{ select_field(
+                    "dietType", "Diet type", "Select diet",
+                    [
+                    ("standard", "Standard"),
+                    ("mediterranean", "Mediterranean"),
+                    ("vegetarian", "Vegetarian"),
+                    ("vegan", "Vegan")
+                    ]
+                    ) }}
+
+                    {{ select_field(
+                    "coffeeConsumption", "Coffee consumption", "Select consumption",
+                    [
+                    ("none", "None"),
+                    ("1-2", "1–2 cups per day"),
+                    ("3-4", "3–4 cups per day"),
+                    ("5+", "5+ cups per day")
+                    ]
+                    ) }}
+
+                    <div class="ns-field ns-alcohol">
+                        <label for="alcoholConsumption">Alcohol consumption (drinks per week)</label>
+
+                        <div class="ns-stepper" id="alcohol-stepper">
+                            <button class="ns-stepper-button" id="alcohol-decrease" type="button"
+                                aria-label="Decrease drinks per week" aria-controls="alcoholConsumption"
+                                hidden>−</button>
+
+                            <input class="ns-control" id="alcoholConsumption" name="alcoholConsumption" type="number"
+                                inputmode="numeric" min="0" max="30" step="1" value="0" required
+                                aria-describedby="alcohol-hint">
+
+                            <button class="ns-stepper-button" id="alcohol-increase" type="button"
+                                aria-label="Increase drinks per week" aria-controls="alcoholConsumption"
+                                hidden>+</button>
+                        </div>
+
+                        <p class="ns-hint" id="alcohol-hint">
+                            Enter a whole number from 0 to 30. Use 0 if you don’t drink.
+                        </p>
+                    </div>
+                </div>
+            </section>
+
+            <section class="ns-card" aria-labelledby="social-heading">
+                <h2 id="social-heading">Smoking and social habits</h2>
+
+                <div class="ns-grid">
+                    {{ select_field(
+                    "smokingStatus", "Smoking status", "Select status",
+                    [
+                    ("never", "Never smoked"),
+                    ("former", "Former smoker"),
+                    ("current", "Current smoker")
+                    ]
+                    ) }}
+
+                    {{ select_field(
+                    "socialEngagement", "Social engagement", "Select level",
+                    [
+                    ("low", "Low"),
+                    ("moderate", "Moderate"),
+                    ("high", "High")
+                    ]
+                    ) }}
+                </div>
+            </section>
+
+            <div class="ns-actions">
+                <a class="ns-button ns-previous" href="assessment?step=2">
+                    <span aria-hidden="true">←</span> Previous
+                </a>
+
+                <button class="ns-button ns-next" type="submit">
+                    Next <span aria-hidden="true">→</span>
+                </button>
+            </div>
+        </form>
+    </main>
+
+    <script>
+        const alcoholInput = document.getElementById("alcoholConsumption");
+        const decreaseButton = document.getElementById("alcohol-decrease");
+        const increaseButton = document.getElementById("alcohol-increase");
+
+        const minimum = Number(alcoholInput.min);
+        const maximum = Number(alcoholInput.max);
+
+        function updateStepper() {
+            const value = alcoholInput.valueAsNumber;
+
+            decreaseButton.setAttribute(
+                "aria-disabled",
+                String(Number.isFinite(value) && value <= minimum)
+            );
+
+            increaseButton.setAttribute(
+                "aria-disabled",
+                String(Number.isFinite(value) && value >= maximum)
+            );
+        }
+
+        function changeAlcoholAmount(event, amount) {
+            if (event.currentTarget.getAttribute("aria-disabled") === "true") {
+                return;
+            }
+
+            const typedValue = alcoholInput.valueAsNumber;
+            const currentValue = Number.isFinite(typedValue) ? Math.round(typedValue) : minimum;
+            const nextValue = Math.min(maximum, Math.max(minimum, currentValue + amount));
+
+            alcoholInput.value = String(nextValue);
+            alcoholInput.dispatchEvent(new Event("input", { bubbles: true }));
+        }
+
+        decreaseButton.addEventListener("click", (event) => changeAlcoholAmount(event, -1));
+        increaseButton.addEventListener("click", (event) => changeAlcoholAmount(event, 1));
+        alcoholInput.addEventListener("input", updateStepper);
+        window.addEventListener("pageshow", updateStepper);
+
+        updateStepper();
+        decreaseButton.hidden = false;
+        increaseButton.hidden = false;
+    </script>
+</body>
+
+</html>

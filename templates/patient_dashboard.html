@@ -1,0 +1,67 @@
+{% extends "patient_base.html" %}
+
+{% block title %}Patient Dashboard{% endblock %}
+
+{% block content %}
+<header class="portal-hero">
+    <h1>{% if patient %}Welcome back, {{ patient }}{% else %}Welcome back{% endif %}</h1>
+    <p>Start an assessment or review your health records.</p>
+</header>
+
+{% if profile_incomplete %}
+<section class="profile-reminder" id="profile-reminder" aria-labelledby="reminder-heading">
+    <div>
+        <h2 id="reminder-heading">Please complete your profile</h2>
+        <p>Add your missing personal details. </p>
+        <a class="button button-primary" href="{{ url_for('patient_profile') }}">
+            Complete profile <span aria-hidden="true">→</span>
+        </a>
+    </div>
+
+    <button class="dismiss-button" id="dismiss-reminder" type="button" aria-label="Dismiss profile reminder" hidden>
+        <span aria-hidden="true">×</span>
+    </button>
+</section>
+{% endif %}
+
+<section class="dashboard-actions" aria-labelledby="actions-heading">
+    <h2 id="actions-heading" tabindex="-1">Quick actions</h2>
+
+    <div class="action-grid">
+        {% for endpoint, icon, label, description in [
+        ("assessment", "icon_assessment.png", "Start assessment",
+        "Begin the four-step questionnaire."),
+        ("patient_timeline", "icon_timeline.png", "Health timeline",
+        "View your recorded health events."),
+        ("patient_ehr", "icon_ehr.png", "My EHR",
+        "View your electronic health record."),
+        ("patient_profile", "icon_profile.png", "My profile",
+        "Update your personal information.")
+        ] %}
+        <a class="action-card" href="{{ url_for(endpoint) }}">
+            <img src="{{ url_for('static', filename=icon) }}" alt="">
+            <div>
+                <span class="action-title">{{ label }}</span>
+                <p>{{ description }}</p>
+            </div>
+            <span class="action-arrow" aria-hidden="true">→</span>
+        </a>
+        {% endfor %}
+    </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    const reminder = document.getElementById("profile-reminder");
+    const dismissButton = document.getElementById("dismiss-reminder");
+
+    if (reminder && dismissButton) {
+        dismissButton.hidden = false;
+        dismissButton.addEventListener("click", () => {
+            reminder.hidden = true;
+            document.getElementById("actions-heading").focus();
+        });
+    }
+</script>
+{% endblock %}

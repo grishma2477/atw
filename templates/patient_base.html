@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% block title %}{% endblock %} - NeuroSense</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/patient_portal.css') }}">
+</head>
+
+<body>
+    <header class="portal-header">
+        <div class="nav-shell">
+            <a class="brand" href="{{ url_for('patient_dashboard') }}" aria-label="NeuroSense dashboard">
+                <img src="{{ url_for('static', filename='logo.png') }}" alt="">
+                <span>NeuroSense</span>
+            </a>
+
+            <nav class="nav-links" aria-label="Patient navigation">
+                {% for endpoint, page, label in [
+                ("patient_dashboard", "dashboard", "Dashboard"),
+                ("assessment", "assessment", "Start Assessment"),
+                ("patient_timeline", "timeline", "Health Timeline"),
+                ("patient_ehr", "ehr", "My EHR"),
+                ("patient_profile", "profile", "My Profile")
+                ] %}
+                <a href="{{ url_for(endpoint) }}" {% if active_page==page %}aria-current="page" {% endif %}>
+                    {{ label }}
+                </a>
+                {% endfor %}
+
+                <a class="logout" href="{{ url_for('logout') }}">Log out</a>
+            </nav>
+        </div>
+    </header>
+
+    <main class="portal-main">
+        {% block content %}{% endblock %}
+    </main>
+
+    {% block scripts %}{% endblock %}
+</body>
+
+</html>

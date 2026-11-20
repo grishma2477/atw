@@ -1,0 +1,288 @@
+{% extends "patient_base.html" %}
+
+{% block title %}Health Timeline{% endblock %}
+
+{% block content %}
+{% set selected_disease = request.args.get("disease", "") %}
+{% set selected_type = request.args.get("type", "") %}
+{% set is_filtered = selected_disease or selected_type %}
+
+<style>
+    .timeline-hero {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px 24px;
+    }
+
+    .timeline-hero .timeline-export {
+        background: var(--surface);
+        color: var(--blue-dark);
+    }
+
+    .timeline-hero .timeline-export:hover {
+        background: var(--soft-blue);
+    }
+
+    .timeline-filters,
+    .timeline-panel {
+        margin-top: 20px;
+    }
+
+    .timeline-filter-form {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr)) auto;
+        align-items: end;
+        gap: 14px;
+    }
+
+    .timeline-filter-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    .timeline-heading {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px 16px;
+        margin-bottom: 18px;
+    }
+
+    .timeline-heading h2 {
+        margin: 0;
+    }
+
+    .timeline-count {
+        color: var(--muted);
+        font-size: 14px;
+    }
+
+    .timeline-list {
+        position: relative;
+        display: grid;
+        gap: 14px;
+        margin: 0;
+        padding: 0 0 0 28px;
+        list-style: none;
+    }
+
+    .timeline-list::before {
+        position: absolute;
+        top: 16px;
+        bottom: 16px;
+        left: 6px;
+        width: 2px;
+        background: #d4e3fc;
+        content: "";
+    }
+
+    .timeline-event {
+        position: relative;
+        min-width: 0;
+        padding: 16px 18px;
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        background: #f8faff;
+    }
+
+    .timeline-event::before {
+        position: absolute;
+        top: 18px;
+        left: -28px;
+        width: 13px;
+        height: 13px;
+        border: 3px solid var(--surface);
+        border-radius: 50%;
+        background: var(--blue);
+        box-shadow: 0 0 0 1px #b9cff6;
+        content: "";
+    }
+
+    .timeline-event-header {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 4px 16px;
+    }
+
+    .timeline-event h3 {
+        margin: 0;
+        font-size: 17px;
+        line-height: 1.35;
+        overflow-wrap: anywhere;
+    }
+
+    .timeline-date {
+        color: var(--muted);
+        font-size: 14px;
+        font-variant-numeric: tabular-nums;
+    }
+
+    .timeline-description {
+        margin: 8px 0 0;
+        color: var(--muted);
+        overflow-wrap: anywhere;
+        white-space: pre-wrap;
+    }
+
+    .timeline-tag {
+        display: inline-block;
+        margin-top: 12px;
+        padding: 4px 10px;
+        border-radius: 999px;
+        background: var(--soft-blue);
+        color: var(--blue-dark);
+        font-size: 13px;
+        font-weight: 650;
+        overflow-wrap: anywhere;
+    }
+
+    .timeline-empty {
+        padding: clamp(20px, 4vw, 36px);
+        border: 1px dashed #a9b7cc;
+        border-radius: 14px;
+        background: #f8faff;
+        text-align: center;
+    }
+
+    .timeline-empty h3 {
+        margin: 0 0 6px;
+        font-size: 18px;
+    }
+
+    .timeline-empty p {
+        margin: 0;
+        color: var(--muted);
+    }
+
+    .timeline-empty .button {
+        margin-top: 14px;
+    }
+
+    @media (max-width: 700px) {
+        .timeline-filter-form {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        .timeline-filter-actions {
+            grid-column: 1 / -1;
+        }
+    }
+
+    @media (max-width: 440px) {
+        .timeline-filter-form {
+            grid-template-columns: 1fr;
+        }
+
+        .timeline-hero .timeline-export {
+            width: 100%;
+        }
+    }
+</style>
+
+<header class="portal-hero timeline-hero">
+    <div>
+        <h1>Health timeline</h1>
+        <p>Review your recorded health events in date order.</p>
+    </div>
+
+    <a class="button timeline-export" href="{{ url_for('export_timeline') }}">
+        Export timeline PDF <span aria-hidden="true">↓</span>
+    </a>
+</header>
+
+<section class="panel timeline-filters" aria-labelledby="timeline-filters-heading">
+    <h2 id="timeline-filters-heading">Filter events</h2>
+
+    <form class="timeline-filter-form" method="get" action="{{ url_for('patient_timeline') }}">
+        <div class="field">
+            <label for="timeline-disease">Condition</label>
+            <select id="timeline-disease" name="disease">
+                <option value="">All conditions</option>
+                {% for disease in ["Alzheimer's", "Parkinson's", "Dementia"] %}
+                <option value="{{ disease }}" {% if selected_disease==disease %}selected{% endif %}>
+                    {{ disease }}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="field">
+            <label for="timeline-type">Event type</label>
+            <select id="timeline-type" name="type">
+                <option value="">All event types</option>
+                <option value="diagnosis" {% if selected_type=="diagnosis" %}selected{% endif %}>
+                    Diagnosis
+                </option>
+            </select>
+        </div>
+
+        <div class="timeline-filter-actions">
+            <button class="button button-primary" type="submit">Apply filters</button>
+
+            {% if is_filtered %}
+            <a class="button button-secondary" href="{{ url_for('patient_timeline') }}">
+                Clear filters
+            </a>
+            {% endif %}
+        </div>
+    </form>
+</section>
+
+<section class="panel timeline-panel" aria-labelledby="timeline-events-heading">
+    <div class="timeline-heading">
+        <h2 id="timeline-events-heading">Health events</h2>
+        {% if events %}
+        <span class="timeline-count">
+            {{ events | length }} {{ "event" if events | length == 1 else "events" }}
+        </span>
+        {% endif %}
+    </div>
+
+    {% if events %}
+    <ol class="timeline-list">
+        {% for event in events %}
+        <li class="timeline-event">
+            <div class="timeline-event-header">
+                <h3>{{ event.title or "Health event" }}</h3>
+
+                {% if event.created_at %}
+                <time class="timeline-date" datetime="{{ event.created_at.isoformat() }}">
+                    {{ event.created_at.strftime("%d %b %Y, %I:%M %p") }}
+                </time>
+                {% else %}
+                <span class="timeline-date">Date unavailable</span>
+                {% endif %}
+            </div>
+
+            {% if event.description %}
+            <p class="timeline-description">{{ event.description }}</p>
+            {% endif %}
+
+            {% if event.disease %}
+            <span class="timeline-tag">{{ event.disease }}</span>
+            {% endif %}
+        </li>
+        {% endfor %}
+    </ol>
+    {% else %}
+    <div class="timeline-empty">
+        {% if is_filtered %}
+        <h3>No matching events</h3>
+        <p>Choose a different condition or event type to broaden your search.</p>
+        <a class="button button-secondary" href="{{ url_for('patient_timeline') }}">
+            View all events
+        </a>
+        {% else %}
+        <h3>No health events recorded yet</h3>
+        <p>New events will appear here once they’re recorded in your timeline.</p>
+        {% endif %}
+    </div>
+    {% endif %}
+</section>
+{% endblock %}

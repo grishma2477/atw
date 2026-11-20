@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Cognitive Test Questions - NeuroSense</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+
+    <style>
+        body.ns-cognitive {
+            --blue: #2563eb;
+            --blue-dark: #1d4ed8;
+            --ink: #172443;
+            --muted: #52627a;
+            --line: #dce4f0;
+            --control-line: #a9b7cc;
+            --white: #fff;
+            --soft-blue: #edf3ff;
+
+            margin: 0;
+            background: #f6f7fb;
+            color: var(--ink);
+            font: 16px/1.55 system-ui, sans-serif;
+        }
+
+        .ns-cognitive *,
+        .ns-cognitive *::before,
+        .ns-cognitive *::after {
+            box-sizing: border-box;
+        }
+
+        .ns-cognitive :focus-visible {
+            outline: 3px solid var(--blue);
+            outline-offset: 3px;
+        }
+
+        /* Patient navigation */
+        .ns-cognitive .ns-topbar {
+            background: var(--white);
+            border-bottom: 1px solid var(--line);
+        }
+
+        .ns-cognitive .ns-nav {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px 24px;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 14px 24px;
+        }
+
+        .ns-cognitive .ns-brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 21px;
+            font-weight: 750;
+        }
+
+        .ns-cognitive .ns-brand img {
+            width: 36px;
+            height: 36px;
+            object-fit: contain;
+        }
+
+        .ns-cognitive .ns-links {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+        }
+
+        .ns-cognitive .ns-links a {
+            display: inline-flex;
+            align-items: center;
+            min-height: 44px;
+            padding: 6px 12px;
+            border-radius: 9px;
+            color: var(--muted);
+            font-size: 14px;
+            font-weight: 650;
+            text-decoration: none;
+        }
+
+        .ns-cognitive .ns-links a:hover,
+        .ns-cognitive .ns-links a[aria-current="location"] {
+            background: var(--soft-blue);
+            color: var(--blue-dark);
+        }
+
+        /* Assessment heading */
+        .ns-cognitive .ns-main {
+            width: min(960px, calc(100% - 32px));
+            margin: 36px auto 56px;
+        }
+
+        .ns-cognitive .ns-hero {
+            padding: clamp(22px, 4vw, 36px);
+            border-radius: 20px;
+            color: var(--white);
+            background:
+                radial-gradient(ellipse at top right, #3067d3, transparent 62%),
+                linear-gradient(125deg, #173ba3, #1d4ed8);
+            box-shadow: 0 12px 30px rgb(29 78 216 / 16%);
+        }
+
+        .ns-cognitive .ns-step,
+        .ns-cognitive .ns-hero-note {
+            margin: 0;
+            color: inherit;
+        }
+
+        .ns-cognitive .ns-step {
+            font-size: 14px;
+            font-weight: 700;
+        }
+
+        .ns-cognitive .ns-hero h1 {
+            margin: 5px 0 8px;
+            color: inherit;
+            font-size: clamp(27px, 4vw, 42px);
+            line-height: 1.15;
+            letter-spacing: -.035em;
+        }
+
+        .ns-cognitive .ns-progress {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 8px;
+            margin-top: 22px;
+        }
+
+        .ns-cognitive .ns-progress span {
+            height: 5px;
+            border-radius: 999px;
+            background: var(--white);
+        }
+
+        /* Form cards */
+        .ns-cognitive .ns-form {
+            display: grid;
+            gap: 16px;
+            margin-top: 20px;
+        }
+
+        .ns-cognitive .ns-card {
+            min-width: 0;
+            padding: clamp(18px, 3vw, 28px);
+            border: 1px solid var(--line);
+            border-radius: 18px;
+            background: var(--white);
+            box-shadow: 0 8px 24px rgb(23 36 67 / 5%);
+        }
+
+        .ns-cognitive .ns-card h2,
+        .ns-cognitive .ns-heading {
+            display: block;
+            margin: 0;
+            padding: 0;
+            color: var(--ink);
+            font-size: 21px;
+            font-weight: 750;
+            line-height: 1.25;
+            letter-spacing: -.02em;
+        }
+
+        .ns-cognitive fieldset {
+            min-width: 0;
+            margin: 0;
+            padding: 0;
+            border: 0;
+        }
+
+        .ns-cognitive .ns-severity-group {
+            margin-top: 18px;
+        }
+
+        .ns-cognitive .ns-severity-group legend {
+            margin-bottom: 8px;
+            padding: 0;
+            color: var(--ink);
+            font-size: 15px;
+            font-weight: 700;
+        }
+
+        .ns-cognitive .ns-hint {
+            margin: 6px 0 14px;
+            color: var(--muted);
+            font-size: 14px;
+        }
+
+        .ns-cognitive .ns-severity,
+        .ns-cognitive .ns-symptoms {
+            display: grid;
+            gap: 10px;
+        }
+
+        .ns-cognitive .ns-severity {
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+        }
+
+        .ns-cognitive .ns-symptoms {
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+        }
+
+        .ns-cognitive .ns-choice {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            min-height: 50px;
+            margin: 0;
+            padding: 10px 12px;
+            border: 1px solid var(--control-line);
+            border-radius: 11px;
+            background: var(--white);
+            color: var(--ink);
+            font-size: 15px;
+            font-weight: 550;
+            cursor: pointer;
+        }
+
+        .ns-cognitive .ns-choice:hover {
+            border-color: var(--blue);
+            background: #f7f9ff;
+        }
+
+        .ns-cognitive .ns-choice:has(input:checked) {
+            border-color: var(--blue);
+            background: var(--soft-blue);
+            color: var(--blue-dark);
+        }
+
+        .ns-cognitive .ns-choice input {
+            position: static;
+            flex: 0 0 18px;
+            width: 18px;
+            height: 18px;
+            margin: 0;
+            accent-color: var(--blue);
+            cursor: pointer;
+        }
+
+        .ns-cognitive .ns-optional {
+            margin-left: 6px;
+            color: var(--muted);
+            font-size: 13px;
+            font-weight: 500;
+            letter-spacing: normal;
+        }
+
+        .ns-cognitive .ns-textarea {
+            display: block;
+            width: 100%;
+            min-height: 110px;
+            padding: 12px 14px;
+            border: 1px solid var(--control-line);
+            border-radius: 11px;
+            background: var(--white);
+            color: var(--ink);
+            font: inherit;
+            resize: vertical;
+        }
+
+        /* Assessment actions */
+        .ns-cognitive .ns-actions {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            gap: 12px;
+            margin-top: 4px;
+        }
+
+        .ns-cognitive .ns-button {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            min-height: 48px;
+            padding: 10px 20px;
+            border: 1px solid transparent;
+            border-radius: 10px;
+            font: inherit;
+            font-weight: 700;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        .ns-cognitive .ns-previous {
+            border-color: var(--line);
+            background: var(--white);
+            color: var(--ink);
+        }
+
+        .ns-cognitive .ns-previous:hover {
+            border-color: var(--control-line);
+            background: var(--soft-blue);
+        }
+
+        .ns-cognitive .ns-submit {
+            background: var(--blue-dark);
+            color: var(--white);
+        }
+
+        .ns-cognitive .ns-submit:hover {
+            background: #1e40af;
+        }
+
+        @media (max-width: 700px) {
+            .ns-cognitive .ns-symptoms {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+        }
+
+        @media (max-width: 600px) {
+            .ns-cognitive .ns-nav {
+                padding-inline: 16px;
+            }
+
+            .ns-cognitive .ns-main {
+                margin-top: 20px;
+                margin-bottom: 32px;
+            }
+
+            .ns-cognitive .ns-severity {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+        }
+
+        @media (max-width: 420px) {
+
+            .ns-cognitive .ns-symptoms,
+            .ns-cognitive .ns-actions {
+                grid-template-columns: 1fr;
+            }
+
+            .ns-cognitive .ns-actions {
+                display: grid;
+            }
+        }
+    </style>
+</head>
+
+{% macro severity_field(name, label) %}
+<fieldset class="ns-severity-group">
+    <legend>{{ label }}</legend>
+
+    <div class="ns-severity">
+        {% for value, text in [
+        ("none", "None"),
+        ("mild", "Mild"),
+        ("moderate", "Moderate"),
+        ("severe", "Severe")
+        ] %}
+        <label class="ns-choice">
+            <input type="radio" name="{{ name }}" value="{{ value }}" {% if value=="none" %}checked{% endif %}>
+            <span>{{ text }}</span>
+        </label>
+        {% endfor %}
+    </div>
+</fieldset>
+{% endmacro %}
+
+<body class="ns-cognitive">
+    <header class="ns-topbar">
+        <div class="ns-nav">
+            <div class="ns-brand">
+                <img src="{{ url_for('static', filename='logo.png') }}" alt="">
+                <span>NeuroSense</span>
+            </div>
+
+            <nav class="ns-links" aria-label="Patient navigation">
+                <a href="patient_dashboard">Dashboard</a>
+                <a href="assessment" aria-current="location">Start Assessment</a>
+                <a href="timeline">Health Timeline</a>
+                <a href="ehr">My EHR</a>
+                <a href="patient_profile">My Profile</a>
+            </nav>
+        </div>
+    </header>
+
+    <main class="ns-main">
+        <header class="ns-hero">
+            <p class="ns-step">Step 4 of 4</p>
+            <h1>Cognitive Test Questions</h1>
+            <p class="ns-hero-note">
+                Tell us about any changes you’ve noticed in your memory, speech, or mood.
+            </p>
+
+            <div class="ns-progress" aria-hidden="true">
+                <span></span>
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </header>
+
+        <form class="ns-form" method="POST">
+            <section class="ns-card" aria-labelledby="memory-speech-heading">
+                <h2 id="memory-speech-heading">Memory and speech</h2>
+                <p class="ns-hint">Choose one option for each question.</p>
+
+                {{ severity_field("memoryComplaints", "Memory difficulties") }}
+                {{ severity_field("speechIssues", "Speech difficulties") }}
+            </section>
+
+            <div class="ns-card">
+                <fieldset id="neurological-symptoms" aria-describedby="symptoms-hint">
+                    <legend class="ns-heading">Neurological symptoms</legend>
+
+                    <p class="ns-hint" id="symptoms-hint">
+                        Select all that apply, or choose None if you haven’t noticed any of these symptoms.
+                    </p>
+
+                    <div class="ns-symptoms">
+                        {% for item in [
+                        "Tremors",
+                        "Balance problems",
+                        "Coordination issues",
+                        "Stiffness",
+                        "Slowed movement",
+                        "Vision changes",
+                        "Headaches",
+                        "Dizziness",
+                        "None"
+                        ] %}
+                        <label class="ns-choice">
+                            <input type="checkbox" name="neurologicalSymptoms" value="{{ item }}">
+                            <span>{{ item }}</span>
+                        </label>
+                        {% endfor %}
+                    </div>
+                </fieldset>
+            </div>
+
+            <div class="ns-card">
+                <label class="ns-heading" for="moodChanges">
+                    Mood changes <span class="ns-optional">(optional)</span>
+                </label>
+
+                <p class="ns-hint" id="mood-hint">
+                    Describe any changes in your mood that you’d like to share.
+                </p>
+
+                <textarea class="ns-textarea" id="moodChanges" name="moodChanges" rows="4"
+                    aria-describedby="mood-hint"></textarea>
+            </div>
+
+            <div class="ns-actions">
+                <a class="ns-button ns-previous" href="assessment?step=3">
+                    <span aria-hidden="true">←</span> Previous
+                </a>
+
+                <button class="ns-button ns-submit" type="submit">
+                    Submit assessment
+                </button>
+            </div>
+        </form>
+    </main>
+
+    <script>
+        const symptomGroup = document.getElementById("neurological-symptoms");
+        const noneOption = symptomGroup.querySelector('input[value="None"]');
+        const symptomOptions = symptomGroup.querySelectorAll(
+            'input[name="neurologicalSymptoms"]:not([value="None"])'
+        );
+
+        symptomGroup.addEventListener("change", (event) => {
+            const changedOption = event.target;
+
+            if (changedOption.name !== "neurologicalSymptoms" || !changedOption.checked) {
+                return;
+            }
+
+            if (changedOption === noneOption) {
+                symptomOptions.forEach((option) => {
+                    option.checked = false;
+                });
+            } else {
+                noneOption.checked = false;
+            }
+        });
+    </script>
+</body>
+
+</html>

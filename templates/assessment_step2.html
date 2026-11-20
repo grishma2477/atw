@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Medical &amp; Family History - NeuroSense</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+
+    <style>
+        body.ns-history {
+            --blue: #2563eb;
+            --blue-dark: #1d4ed8;
+            --ink: #172443;
+            --muted: #52627a;
+            --line: #dce4f0;
+            --surface: #fff;
+            --soft-blue: #edf3ff;
+
+            margin: 0;
+            background: #f6f7fb;
+            color: var(--ink);
+            font: 16px/1.55 system-ui, sans-serif;
+        }
+
+        .ns-history *,
+        .ns-history *::before,
+        .ns-history *::after {
+            box-sizing: border-box;
+        }
+
+        .ns-history :focus-visible {
+            outline: 3px solid var(--blue);
+            outline-offset: 3px;
+        }
+
+        /* Patient navigation */
+        .ns-history .ns-topbar {
+            background: var(--surface);
+            border-bottom: 1px solid var(--line);
+        }
+
+        .ns-history .ns-nav {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px 24px;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 14px 24px;
+        }
+
+        .ns-history .ns-brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 21px;
+            font-weight: 750;
+        }
+
+        .ns-history .ns-brand img {
+            width: 36px;
+            height: 36px;
+            object-fit: contain;
+        }
+
+        .ns-history .ns-links {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+        }
+
+        .ns-history .ns-links a {
+            display: inline-flex;
+            align-items: center;
+            min-height: 44px;
+            padding: 6px 12px;
+            border-radius: 9px;
+            color: var(--muted);
+            font-size: 14px;
+            font-weight: 650;
+            text-decoration: none;
+        }
+
+        .ns-history .ns-links a:hover,
+        .ns-history .ns-links a[aria-current="location"] {
+            color: var(--blue-dark);
+            background: var(--soft-blue);
+        }
+
+        /* Assessment header */
+        .ns-history .ns-main {
+            width: min(960px, calc(100% - 32px));
+            margin: 36px auto 56px;
+        }
+
+        .ns-history .ns-hero {
+            padding: clamp(22px, 4vw, 36px);
+            border-radius: 20px;
+            color: #fff;
+            background:
+                radial-gradient(ellipse at top right, #3067d3, transparent 62%),
+                linear-gradient(125deg, #173ba3, #1d4ed8);
+            box-shadow: 0 12px 30px rgb(29 78 216 / 16%);
+        }
+
+        .ns-history .ns-step {
+            margin: 0;
+            font-size: 14px;
+            font-weight: 700;
+        }
+
+        .ns-history .ns-hero h1 {
+            margin: 5px 0 8px;
+            color: inherit;
+            font-size: clamp(27px, 4vw, 42px);
+            line-height: 1.15;
+            letter-spacing: -.035em;
+        }
+
+        .ns-history .ns-hero-note {
+            margin: 0;
+            color: #fff;
+        }
+
+        .ns-history .ns-progress {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 8px;
+            margin-top: 22px;
+        }
+
+        .ns-history .ns-progress span {
+            height: 5px;
+            border-radius: 999px;
+            background: rgb(255 255 255 / 35%);
+        }
+
+        .ns-history .ns-progress span:nth-child(-n + 2) {
+            background: #fff;
+        }
+
+        /* Form cards */
+        .ns-history .ns-form {
+            display: grid;
+            gap: 16px;
+            margin-top: 20px;
+        }
+
+        .ns-history .ns-card {
+            min-width: 0;
+            padding: clamp(18px, 3vw, 28px);
+            border: 1px solid var(--line);
+            border-radius: 18px;
+            background: var(--surface);
+            box-shadow: 0 8px 24px rgb(23 36 67 / 5%);
+        }
+
+        .ns-history .ns-card fieldset {
+            min-width: 0;
+            margin: 0;
+            padding: 0;
+            border: 0;
+        }
+
+        .ns-history .ns-heading {
+            display: block;
+            padding: 0;
+            color: var(--ink);
+            font-size: 21px;
+            font-weight: 750;
+            line-height: 1.25;
+            letter-spacing: -.02em;
+        }
+
+        .ns-history .ns-hint {
+            margin: 5px 0 16px;
+            color: var(--muted);
+            font-size: 14px;
+        }
+
+        .ns-history .ns-options {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 10px;
+        }
+
+        .ns-history .ns-option {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            min-height: 52px;
+            margin: 0;
+            padding: 11px 14px;
+            border: 1px solid #a9b7cc;
+            border-radius: 11px;
+            background: var(--surface);
+            color: var(--ink);
+            font-size: 15px;
+            font-weight: 550;
+            cursor: pointer;
+        }
+
+        .ns-history .ns-option:hover {
+            border-color: var(--blue);
+            background: #f7f9ff;
+        }
+
+        .ns-history .ns-option:has(input:checked) {
+            border-color: var(--blue);
+            background: var(--soft-blue);
+            color: var(--blue-dark);
+        }
+
+        .ns-history .ns-option input {
+            flex: 0 0 18px;
+            width: 18px;
+            height: 18px;
+            margin: 0;
+            accent-color: var(--blue);
+            cursor: pointer;
+        }
+
+        .ns-history .ns-optional {
+            margin-left: 8px;
+            color: var(--muted);
+            font-size: 13px;
+            font-weight: 500;
+            letter-spacing: normal;
+        }
+
+        .ns-history .ns-text {
+            display: block;
+            width: 100%;
+            min-height: 48px;
+            padding: 11px 14px;
+            border: 1px solid #a9b7cc;
+            border-radius: 11px;
+            background: var(--surface);
+            color: var(--ink);
+            font: inherit;
+        }
+
+        .ns-history .ns-text::placeholder {
+            color: var(--muted);
+        }
+
+        /* Assessment actions */
+        .ns-history .ns-actions {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            gap: 12px;
+            margin-top: 4px;
+        }
+
+        .ns-history .ns-button {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            min-height: 48px;
+            padding: 10px 20px;
+            border: 1px solid transparent;
+            border-radius: 10px;
+            font: inherit;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        .ns-history .ns-previous {
+            border-color: var(--line);
+            background: var(--surface);
+            color: var(--ink);
+        }
+
+        .ns-history .ns-previous:hover {
+            border-color: #a9b7cc;
+            background: var(--soft-blue);
+        }
+
+        .ns-history .ns-next {
+            background: var(--blue-dark);
+            color: #fff;
+        }
+
+        .ns-history .ns-next:hover {
+            background: #1e40af;
+        }
+
+        @media (max-width: 600px) {
+            .ns-history .ns-nav {
+                padding-inline: 16px;
+            }
+
+            .ns-history .ns-main {
+                margin-top: 20px;
+                margin-bottom: 32px;
+            }
+
+            .ns-history .ns-options {
+                grid-template-columns: 1fr;
+            }
+
+            .ns-history .ns-actions {
+                display: grid;
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+
+            .ns-history .ns-button {
+                padding-inline: 10px;
+            }
+        }
+    </style>
+</head>
+
+<body class="ns-history">
+    <header class="ns-topbar">
+        <div class="ns-nav">
+            <div class="ns-brand">
+                <img src="{{ url_for('static', filename='logo.png') }}" alt="">
+                <span>NeuroSense</span>
+            </div>
+
+            <nav class="ns-links" aria-label="Patient navigation">
+                <a href="patient_dashboard">Dashboard</a>
+                <a href="assessment" aria-current="location">Start Assessment</a>
+                <a href="timeline">Health Timeline</a>
+                <a href="ehr">My EHR</a>
+                <a href="patient_profile">My Profile</a>
+            </nav>
+        </div>
+    </header>
+
+    <main class="ns-main">
+        <header class="ns-hero">
+            <p class="ns-step">Step 2 of 4</p>
+            <h1>Medical &amp; Family History</h1>
+            <p class="ns-hero-note">
+                Tell us about your health and your family’s medical history.
+            </p>
+
+            <div class="ns-progress" aria-hidden="true">
+                <span></span>
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </header>
+
+        <form class="ns-form" method="POST">
+            <div class="ns-card">
+                <fieldset aria-describedby="family-hint">
+                    <legend class="ns-heading">Family history</legend>
+                    <p class="ns-hint" id="family-hint">
+                        Select any conditions that members of your family have had.
+                    </p>
+
+                    <div class="ns-options">
+                        {% for item in [
+                        "Alzheimer's Disease",
+                        "Parkinson's Disease",
+                        "Dementia",
+                        "Stroke",
+                        "Heart Disease"
+                        ] %}
+                        <label class="ns-option">
+                            <input type="checkbox" name="familyHistory" value="{{ item }}">
+                            <span>{{ item }}</span>
+                        </label>
+                        {% endfor %}
+                    </div>
+                </fieldset>
+            </div>
+
+            <div class="ns-card">
+                <fieldset aria-describedby="conditions-hint">
+                    <legend class="ns-heading">Current medical conditions</legend>
+                    <p class="ns-hint" id="conditions-hint">
+                        Select all conditions that currently apply to you.
+                    </p>
+
+                    <div class="ns-options">
+                        {% for item in [
+                        "Hypertension",
+                        "Diabetes",
+                        "High Cholesterol",
+                        "Depression",
+                        "Anxiety",
+                        "Thyroid Disorder"
+                        ] %}
+                        <label class="ns-option">
+                            <input type="checkbox" name="medicalConditions" value="{{ item }}">
+                            <span>{{ 'High blood pressure (hypertension)' if item == 'Hypertension' else item }}</span>
+                        </label>
+                        {% endfor %}
+                    </div>
+                </fieldset>
+            </div>
+
+            <div class="ns-card">
+                <fieldset id="medication-options" aria-describedby="medications-hint">
+                    <legend class="ns-heading">Current medications</legend>
+                    <p class="ns-hint" id="medications-hint">
+                        Select all that you currently take, or choose None if you take no medications.
+                    </p>
+
+                    <div class="ns-options">
+                        {% for item in [
+                        "Blood Pressure Medication",
+                        "Diabetes Medication",
+                        "Cholesterol Medication",
+                        "Antidepressants",
+                        "Pain Relievers",
+                        "None"
+                        ] %}
+                        <label class="ns-option">
+                            <input type="checkbox" name="medications" value="{{ item }}">
+                            <span>{{ item }}</span>
+                        </label>
+                        {% endfor %}
+                    </div>
+                </fieldset>
+            </div>
+
+            <div class="ns-card">
+                <label class="ns-heading" for="allergies">
+                    Allergies <span class="ns-optional">(optional)</span>
+                </label>
+                <p class="ns-hint" id="allergies-hint">
+                    List any known allergies to medications, foods, or environmental triggers.
+                </p>
+                <input class="ns-text" id="allergies" name="allergies" type="text"
+                    placeholder="e.g. penicillin, peanuts, pollen" aria-describedby="allergies-hint">
+            </div>
+
+            <div class="ns-actions">
+                <a class="ns-button ns-previous" href="assessment?step=1">
+                    <span aria-hidden="true">←</span> Previous
+                </a>
+            
+                <button class="ns-button ns-next" type="submit">
+                    Next <span aria-hidden="true">→</span>
+                </button>
+            </div>
+        </form>
+    </main>
+
+    <script>
+        const medicationGroup = document.getElementById("medication-options");
+        const noneOption = medicationGroup.querySelector('input[value="None"]');
+        const medicationChoices = medicationGroup.querySelectorAll(
+            'input[name="medications"]:not([value="None"])'
+        );
+
+        medicationGroup.addEventListener("change", (event) => {
+            const changedOption = event.target;
+
+            if (!changedOption.checked) {
+                return;
+            }
+
+            if (changedOption === noneOption) {
+                medicationChoices.forEach((option) => {
+                    option.checked = false;
+                });
+            } else {
+                noneOption.checked = false;
+            }
+        });
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Doctor Dashboard - NeuroSense</title>
+
+    <style>
+        :root {
+            --blue: #2563eb;
+            --blue-dark: #1d4ed8;
+            --ink: #172443;
+            --muted: #52627a;
+            --line: #dce4f0;
+            --surface: #fff;
+            --soft-blue: #edf3ff;
+        }
+
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            background: #f6f7fb;
+            color: var(--ink);
+            font: 16px/1.55 system-ui, sans-serif;
+        }
+
+        a:focus-visible {
+            outline: 3px solid var(--blue);
+            outline-offset: 3px;
+        }
+
+        /* Doctor navigation */
+        .topbar {
+            background: var(--surface);
+            border-bottom: 1px solid var(--line);
+        }
+
+        .nav-shell {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px 24px;
+            max-width: 1280px;
+            margin: 0 auto;
+            padding: 14px 24px;
+        }
+
+        .brand {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            min-height: 44px;
+            color: var(--ink);
+            font-size: 21px;
+            font-weight: 750;
+            text-decoration: none;
+        }
+
+        .brand img {
+            width: 36px;
+            height: 36px;
+            object-fit: contain;
+        }
+
+        .nav-links {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+        }
+
+        .nav-links a {
+            display: inline-flex;
+            align-items: center;
+            min-height: 44px;
+            padding: 6px 12px;
+            border-radius: 9px;
+            color: var(--muted);
+            font-size: 14px;
+            font-weight: 650;
+            text-decoration: none;
+        }
+
+        .nav-links a:hover,
+        .nav-links a[aria-current="page"] {
+            background: var(--soft-blue);
+            color: var(--blue-dark);
+        }
+
+        .nav-links .logout {
+            color: #b91c1c;
+        }
+
+        .nav-links .logout:hover {
+            background: #fef2f2;
+            color: #991b1b;
+        }
+
+        /* Dashboard header */
+        .dashboard {
+            width: min(1200px, calc(100% - 32px));
+            margin: 32px auto 56px;
+        }
+
+        .dashboard-hero {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-between;
+            gap: 18px 24px;
+            padding: clamp(22px, 5vw, 40px);
+            border-radius: 20px;
+            background:
+                radial-gradient(ellipse at top right, #3067d3, transparent 62%),
+                linear-gradient(125deg, #173ba3, #1d4ed8);
+            color: white;
+            box-shadow: 0 12px 30px rgb(29 78 216 / 16%);
+        }
+
+        .dashboard-hero h1 {
+            margin: 0 0 6px;
+            font-size: clamp(28px, 5vw, 42px);
+            line-height: 1.15;
+            letter-spacing: -.035em;
+            overflow-wrap: anywhere;
+        }
+
+        .dashboard-hero p {
+            margin: 0;
+        }
+
+        .hero-action {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            min-height: 46px;
+            padding: 9px 16px;
+            border-radius: 10px;
+            background: white;
+            color: var(--blue-dark);
+            font-weight: 700;
+            text-decoration: none;
+        }
+
+        .hero-action:hover {
+            background: var(--soft-blue);
+        }
+
+        .hero-action:focus-visible {
+            outline-color: white;
+        }
+
+        /* Metrics */
+        .metric-grid {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 14px;
+            margin: 20px 0;
+        }
+
+        .metric-card,
+        .panel {
+            min-width: 0;
+            border: 1px solid var(--line);
+            border-radius: 16px;
+            background: var(--surface);
+            box-shadow: 0 8px 22px rgb(23 36 67 / 5%);
+        }
+
+        .metric-card {
+            padding: clamp(15px, 3vw, 22px);
+        }
+
+        .metric-card dt {
+            margin-bottom: 6px;
+            color: var(--muted);
+            font-size: 14px;
+            font-weight: 650;
+        }
+
+        .metric-card dd {
+            margin: 0;
+            color: var(--blue-dark);
+            font-size: clamp(27px, 4vw, 38px);
+            font-weight: 800;
+            font-variant-numeric: tabular-nums;
+            line-height: 1.1;
+            letter-spacing: -.035em;
+            overflow-wrap: anywhere;
+        }
+
+        /* Patient roster and recent activity */
+        .dashboard-columns {
+            display: grid;
+            grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+            align-items: start;
+            gap: 16px;
+        }
+
+        .panel {
+            padding: clamp(16px, 3vw, 24px);
+        }
+
+        .panel-header {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px 16px;
+            margin-bottom: 12px;
+        }
+
+        .panel h2 {
+            margin: 0;
+            font-size: 21px;
+            line-height: 1.25;
+            letter-spacing: -.02em;
+        }
+
+        .panel-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            min-height: 44px;
+            color: var(--blue-dark);
+            font-size: 14px;
+            font-weight: 700;
+            text-decoration: none;
+        }
+
+        .panel-link:hover {
+            text-decoration: underline;
+        }
+
+        .record-list {
+            margin: 0;
+            padding: 0;
+            list-style: none;
+        }
+
+        .record-row {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: baseline;
+            justify-content: space-between;
+            gap: 4px 16px;
+            padding: 13px 0;
+        }
+
+        .record-row+.record-row {
+            border-top: 1px solid var(--line);
+        }
+
+        .record-name {
+            flex: 1 1 150px;
+            min-width: 0;
+            font-weight: 650;
+            overflow-wrap: anywhere;
+        }
+
+        .record-meta {
+            color: var(--muted);
+            font-size: 14px;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .empty-state {
+            margin: 0;
+            padding: 16px;
+            border: 1px dashed #a9b7cc;
+            border-radius: 12px;
+            background: #f8faff;
+            color: var(--muted);
+        }
+
+        @media (max-width: 760px) {
+            .dashboard {
+                margin-top: 20px;
+            }
+
+            .metric-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+
+            .dashboard-columns {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 460px) {
+            .nav-shell {
+                padding-inline: 16px;
+            }
+
+            .hero-action {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <header class="topbar">
+        <div class="nav-shell">
+            <a class="brand" href="{{ url_for('doctor_dashboard') }}" aria-label="NeuroSense doctor dashboard">
+                <img src="{{ url_for('static', filename='logo.png') }}" alt="">
+                <span>NeuroSense</span>
+            </a>
+
+            <nav class="nav-links" aria-label="Doctor navigation">
+                <a href="{{ url_for('doctor_dashboard') }}" aria-current="page">
+                    Dashboard
+                </a>
+                <a href="{{ url_for('doctor_patients') }}">Patient Management</a>
+                <a href="{{ url_for('doctor_diagnostics_page') }}">Diagnostics</a>
+                <a href="{{ url_for('doctor_interventions') }}">Interventions</a>
+                <a class="logout" href="{{ url_for('logout') }}">Log out</a>
+            </nav>
+        </div>
+    </header>
+
+    <main class="dashboard">
+        <header class="dashboard-hero">
+            <div>
+                <h1>{% if doctor %}Welcome, {{ doctor }}{% else %}Doctor dashboard{% endif %}</h1>
+                <p>Review your patient roster and recent activity.</p>
+            </div>
+
+            <a class="hero-action" href="{{ url_for('doctor_patients') }}">
+                Manage patients <span aria-hidden="true">→</span>
+            </a>
+        </header>
+
+        <dl class="metric-grid" aria-label="Patient overview">
+            {% for label, value in [
+            ("Total patients", total_patients),
+            ("High risk", high_risk),
+            ("Pending", pending),
+            ("Alerts", alerts)
+            ] %}
+            <div class="metric-card">
+                <dt>{{ label }}</dt>
+                <dd>{{ value if value is defined and value is not none else "—" }}</dd>
+            </div>
+            {% endfor %}
+        </dl>
+
+        <div class="dashboard-columns">
+            <section class="panel" aria-labelledby="roster-heading">
+                <div class="panel-header">
+                    <h2 id="roster-heading">Patient roster</h2>
+                    <a class="panel-link" href="{{ url_for('doctor_patients') }}">
+                        View patients <span aria-hidden="true">→</span>
+                    </a>
+                </div>
+
+                {% if patients %}
+                <ul class="record-list">
+                    {% for patient in patients %}
+                    <li class="record-row">
+                        <span class="record-name">
+                            {{ patient.full_name or "Name not recorded" }}
+                        </span>
+                        <span class="record-meta">
+                            {% if patient.age is defined and patient.age is not none and patient.age != "" %}
+                            {{ patient.age }} yrs
+                            {% if patient.gender %} · {% endif %}
+                            {% endif %}
+                            {{ patient.gender or "" }}
+                        </span>
+                    </li>
+                    {% endfor %}
+                </ul>
+                {% else %}
+                <p class="empty-state">No patients found.</p>
+                {% endif %}
+            </section>
+
+            <section class="panel" aria-labelledby="activity-heading">
+                <div class="panel-header">
+                    <h2 id="activity-heading">Recent activity</h2>
+                </div>
+
+                {% if activities %}
+                <ul class="record-list">
+                    {% for activity in activities %}
+                    <li class="record-row">
+                        <span class="record-name">
+                            {{ activity.title or "Activity recorded" }}
+                        </span>
+                        {% if activity.created_at %}
+                        <time class="record-meta" datetime="{{ activity.created_at.isoformat() }}">
+                            {{ activity.created_at.strftime("%d %b %Y") }}
+                        </time>
+                        {% else %}
+                        <span class="record-meta">Date unavailable</span>
+                        {% endif %}
+                    </li>
+                    {% endfor %}
+                </ul>
+                {% else %}
+                <p class="empty-state">No recent activity.</p>
+                {% endif %}
+            </section>
+        </div>
+    </main>
+</body>
+
+</html>
