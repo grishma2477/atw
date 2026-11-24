@@ -164,6 +164,31 @@
         margin-top: 14px;
     }
 
+    .timeline-event-details {
+    margin-top: 12px;
+    padding: 10px 14px;
+    border: 1px solid #ccdffc;
+    border-radius: 10px;
+    background: #edf3ff;
+}
+
+.timeline-event-details summary {
+    display: list-item;
+    padding-block: 5px;
+    color: #1d4ed8;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.timeline-event-details summary:hover {
+    text-decoration: underline;
+}
+
+.timeline-meaning {
+    margin: 8px 0 0;
+    color: #172443;
+}
+
     @media (max-width: 700px) {
         .timeline-filter-form {
             grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -216,9 +241,15 @@
             <label for="timeline-type">Event type</label>
             <select id="timeline-type" name="type">
                 <option value="">All event types</option>
-                <option value="diagnosis" {% if selected_type=="diagnosis" %}selected{% endif %}>
-                    Diagnosis
+                {% for value, label in [
+                ("screening", "Screening"),
+                ("diagnosis", "Diagnosis"),
+                ("intervention", "Intervention")
+                ] %}
+                <option value="{{ value }}" {% if selected_type==value %}selected{% endif %}>
+                    {{ label }}
                 </option>
+                {% endfor %}
             </select>
         </div>
 
@@ -261,7 +292,25 @@
             </div>
 
             {% if event.description %}
-            <p class="timeline-description">{{ event.description }}</p>
+            <details class="timeline-event-details">
+                <summary>
+                    {{ event.badge or "View details" }}
+                </summary>
+            
+                <p class="timeline-meaning">{{ event.explanation }}</p>
+            
+                {% if event.event_type == "screening" and event.badge
+                and event.badge.startswith("Research score:") %}
+                <p class="timeline-description">
+                    The percentage is a research model score. A diagnosis requires
+                    a clinical assessment.
+                </p>
+                {% endif %}
+            
+                {% if event.description %}
+                <p class="timeline-description">{{ event.description }}</p>
+                {% endif %}
+            </details>
             {% endif %}
 
             {% if event.disease %}

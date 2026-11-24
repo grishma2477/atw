@@ -7,6 +7,12 @@ from pathlib import Path
 import joblib
 import pandas as pd
 import xgboost as xgb
+import json
+import re
+from contextlib import closing
+from math import isfinite
+
+from flask import abort
 
 # Set TensorFlow environment variables BEFORE importing ML modules
 os.environ["TF_ENABLE_ONEDNN_OPTS"] = "0"
@@ -32,6 +38,8 @@ from reportlab.lib.pagesizes import A4
 from reportlab.pdfgen import canvas
 
 import io
+
+from neurosense_diagnostics import run_screening
 
 
 
@@ -166,6 +174,122 @@ def load_patient_profile(patient_id):
 # UPDATE PROFILE (SAVE CHANGES)
 # ==========================================
 
+SCREENING_REFERENCE = re.compile(r"^Screening report #([1-9][0-9]*)\.")
+
+
+def read_json_object(value):
+    if isinstance(value, dict):
+        return value
+
+    try:
+        parsed = json.loads(value)
+    except (TypeError, ValueError):
+        return {}
+
+    return parsed if isinstance(parsed, dict) else {}
+
+
+def explain_screening(raw):
+    result = read_json_object(raw)
+    score = result.get("score")
+    points = result.get("questionnaire_points")
+
+    if (
+        result.get("source") == "OASIS XGBoost"
+        and type(score) in (int, float)
+        and 0 <= score <= 100
+        and isfinite(score)
+    ):
+        if score >= 70:
+            meaning = (
+                "The information entered was similar to patterns linked "
+                "to dementia in the model’s research data."
+            )
+        elif score >= 40:
+            meaning = (
+                "The information entered gave a score in the middle "
+                "range of this research model."
+            )
+        else:
+            meaning = (
+                "The information entered gave a score in the lower "
+                "range of this research model."
+            )
+
+        return {
+            "badge": f"Research score: {score:.2f}%",
+            "explanation": (
+                f"{meaning} This score describes the computer’s result "
+                "for the information entered. Your doctor can review it "
+                "alongside your health history and other assessments."
+            ),
+        }
+
+    if (
+        result.get("source") == "Questionnaire fallback"
+        and type(points) is int
+        and points >= 0
+    ):
+        return {
+            "badge": f"Questionnaire score: {points} points",
+            "explanation": (
+                "The app added points from the saved questionnaire answers "
+                "about age, memory and symptoms. This is a summary of the "
+                "answers provided."
+            ),
+        }
+
+    return {
+        "badge": None,
+        "explanation": "A score is unavailable for this screening entry.",
+    }
+
+
+def attach_event_explanations(cursor, patient_id, events):
+    report_ids = set()
+
+    for event in events:
+        report_id = None
+
+        if event["event_type"] == "screening":
+            match = SCREENING_REFERENCE.match(event["description"] or "")
+            if match:
+                report_id = int(match.group(1))
+                report_ids.add(report_id)
+
+        event["screening_report_id"] = report_id
+
+    reports = {}
+    if report_ids:
+        placeholders = ", ".join(["%s"] * len(report_ids))
+
+        cursor.execute(
+            f"""
+            SELECT id, result_json
+            FROM screening_reports
+            WHERE patient_id = %s AND id IN ({placeholders})
+            """,
+            (patient_id, *sorted(report_ids)),
+        )
+        reports = {row["id"]: row["result_json"] for row in cursor.fetchall()}
+
+    for event in events:
+        event_type = event["event_type"]
+
+        if event_type == "screening":
+            event.update(
+                explain_screening(reports.get(event["screening_report_id"]))
+            )
+        else:
+            event["badge"] = None
+            event["explanation"] = {
+                "diagnosis": "This entry contains a diagnosis-related note. Your doctor can explain what was recorded.",
+                "intervention": "This entry contains a follow-up plan or recommendation recorded by your care team.",
+            }.get(
+                event_type,
+                "This entry records an update in your health timeline.",
+            )
+
 @app.route("/timeline")
 def patient_timeline():
     if "patient_id" not in session:
@@ -192,14 +316,15 @@ def patient_timeline():
 
     query += " ORDER BY created_at DESC"
 
-    cur = mysql.connection.cursor()
-    cur.execute(query, params)
-    events = cur.fetchall()
+    with closing(mysql.connection.cursor()) as cur:
+        cur.execute(query, params)
+        events = list(cur.fetchall())
+        attach_event_explanations(cur, pid, events)
 
     return render_template(
         "patient_timeline.html",
         events=events,
-        active_page="timeline"
+        active_page="timeline",
     )
 
 
@@ -559,12 +684,17 @@ def doctor_dashboard():
     alerts = cur.fetchone()["alerts"]
 
     # Patient roster
-    cur.execute("""
-        SELECT id, full_name, age, gender
-        FROM patients
-        ORDER BY id DESC
+    cur.execute(
+        """
+        SELECT p.id, p.full_name, p.age, p.gender
+        FROM patients p
+        JOIN doctor_patient_access a ON a.patient_id = p.id
+        WHERE a.doctor_id = %s
+        ORDER BY p.id DESC
         LIMIT 5
-    """)
+        """,
+        (session["doctor_id"],),
+    )
     patients = cur.fetchall()
 
     # Recent activity
@@ -591,35 +721,40 @@ def doctor_dashboard():
 # ---------------------------
 @app.route("/doctor_patients")
 def doctor_patients():
-    if "doctor_id" not in session:
+    doctor_id = session.get("doctor_id")
+    if not doctor_id:
         return redirect(url_for("doctor_login"))
 
     search = request.args.get("search", "").strip()
 
-    cur = mysql.connection.cursor()
+    query = """
+        SELECT p.id, p.full_name, p.email, p.age, p.gender
+        FROM patients AS p
+        JOIN doctor_patient_access AS access
+            ON access.patient_id = p.id
+        WHERE access.doctor_id = %s
+    """
+    params = [doctor_id]
 
     if search:
-        cur.execute("""
-            SELECT id, full_name, email, age, gender
-            FROM patients
-            WHERE full_name LIKE %s OR email LIKE %s
-            ORDER BY id DESC
-        """, (f"%{search}%", f"%{search}%"))
-    else:
-        cur.execute("""
-            SELECT id, full_name, email, age, gender
-            FROM patients
-            ORDER BY id DESC
-        """)
+        query += " AND (p.full_name LIKE %s OR p.email LIKE %s)"
+        search_term = f"%{search}%"
+        params.extend([search_term, search_term])
 
-    patients = cur.fetchall()
+    query += " ORDER BY p.id DESC"
+
+    cur = mysql.connection.cursor()
+    try:
+        cur.execute(query, tuple(params))
+        patients = cur.fetchall()
+    finally:
+        cur.close()
 
     return render_template(
         "patient_management.html",
         patients=patients,
-        search=search
+        search=search,
     )
-
 
 
 @app.route("/doctor_diagnostics_dash")
@@ -641,8 +776,6 @@ def doctor_diagnostics_page():
         "diagnostics.html",
         patients=patients
     )
-
-
 
 
 
@@ -677,12 +810,138 @@ def insert_diagnostic_report(data):
 # -------------------------------------------------------------------
 # MAIN ROUTE — RUN DIAGNOSTICS
 
+def doctor_can_view_patient(cursor, doctor_id, patient_id):
+    cursor.execute(
+        """
+        SELECT 1
+        FROM doctor_patient_access
+        WHERE doctor_id = %s AND patient_id = %s
+        """,
+        (doctor_id, patient_id),
+    )
+    return cursor.fetchone() is not None
+
+
+@app.route("/doctor/patients/<int:patient_id>")
+def doctor_patient_detail(patient_id):
+    doctor_id = session.get("doctor_id")
+    if not doctor_id:
+        return redirect(url_for("doctor_login"))
+
+    with closing(mysql.connection.cursor()) as cur:
+        if not doctor_can_view_patient(cur, doctor_id, patient_id):
+            abort(404)
+
+        cur.execute(
+            """
+            SELECT id, full_name, email, phone, age, gender, blood_type
+            FROM patients
+            WHERE id = %s
+            """,
+            (patient_id,),
+        )
+        patient = cur.fetchone()
+        if patient is None:
+            abort(404)
+
+        cur.execute(
+            """
+            SELECT created_at, form_data
+            FROM assessments
+            WHERE patient_id = %s
+            ORDER BY created_at DESC
+            """,
+            (patient_id,),
+        )
+        assessments = [
+            {
+                "created_at": row["created_at"],
+                "answers": read_json_object(row["form_data"]),
+            }
+            for row in cur.fetchall()
+        ]
+
+        cur.execute(
+            """
+            SELECT id, created_at, result_json
+            FROM screening_reports
+            WHERE patient_id = %s
+            ORDER BY created_at DESC, id DESC
+            """,
+            (patient_id,),
+        )
+        screenings = [
+            {**row, **explain_screening(row["result_json"])}
+            for row in cur.fetchall()
+        ]
+
+        cur.execute(
+            """
+            SELECT title, description, disease, event_type, created_at
+            FROM health_events
+            WHERE patient_id = %s
+            ORDER BY created_at DESC
+            """,
+            (patient_id,),
+        )
+        events = cur.fetchall()
+
+    return render_template(
+        "doctor_patient_detail.html",
+        patient=patient,
+        assessments=assessments,
+        screenings=screenings,
+        events=events,
+    )
+
+# Add near the top of app2.py if it isn't already imported:
+from contextlib import closing
+
+
 @app.route("/doctor_patient_latest-assessment/<int:patient_id>")
 def get_latest_assessment(patient_id):
+    doctor_id = session.get("doctor_id")
+    if not doctor_id:
+        return jsonify(status="error", message="Unauthorized"), 401
+
+    with closing(mysql.connection.cursor()) as cur:
+        if not doctor_can_view_patient(cur, doctor_id, patient_id):
+            return jsonify(status="error", message="Patient not found."), 404
+
+        cur.execute("""
+            SELECT diag
+            FROM assessments
+            WHERE patient_id = %s
+            ORDER BY created_at DESC, id DESC
+            LIMIT 1
+        """, (patient_id,))
+        row = cur.fetchone()
+
+    if row is None:
+        return jsonify(status="empty")
+
+    diag = read_json_object(row["diag"])
+
+    def display_text(value):
+        if isinstance(value, list):
+            return ", ".join(item for item in value if isinstance(item, str))
+        return value if isinstance(value, str) else ""
+
+    return jsonify(
+        status="success",
+        primary_diagnosis=display_text(diag.get("primary_diagnosis")),
+        diagnosis_confidence=diag.get("diagnosis_confidence"),
+        secondary_diagnoses=display_text(diag.get("secondary_diagnoses")),
+        recommendations=display_text(diag.get("recommendations")),
+        key_findings=display_text(diag.get("key_findings")),
+    )
     if "doctor_id" not in session:
         return jsonify({"error": "Unauthorized"}), 401
 
     cur = mysql.connection.cursor()
+    if not doctor_can_view_patient(cur, session["doctor_id"], patient_id):
+        cur.close()
+        return jsonify({"status": "error", "message": "Patient not found."}), 404
 
     cur.execute("""
         SELECT diag
@@ -713,59 +972,7 @@ def get_latest_assessment(patient_id):
 
 @app.route("/doctor_diagnostics", methods=["POST"])
 def run_diagnostics():
-    if not session.get("doctor_id"):
-        return jsonify(
-            status="error",
-            message="Your session has expired. Please sign in again.",
-        ), 401
-
-    data = request.get_json(silent=True)
-    if not isinstance(data, dict) or not data.get("patient_id"):
-        return jsonify(
-            status="error",
-            message="Select a patient before generating a report.",
-        ), 400
-
-    try:
-        inputs = {feature: float(data[feature]) for feature in OASIS_FEATURES}
-
-        if not all(isfinite(value) for value in inputs.values()):
-            raise ValueError("Inputs must be finite numbers.")
-        if inputs["Sex"] not in (0, 1):
-            raise ValueError("Invalid training sex code.")
-        if not 0 <= inputs["MMSE"] <= 30:
-            raise ValueError("Invalid MMSE score.")
-    except (KeyError, TypeError, ValueError, OverflowError):
-        return jsonify(
-            status="error",
-            message="Enter all seven model inputs. MMSE must be between 0 and 30.",
-        ), 400
-
-    try:
-        scaler, model = load_oasis_artifacts()
-        row = pd.DataFrame([inputs], columns=list(OASIS_FEATURES))
-        scaled_row = scaler.transform(row)
-        predictions = model.predict(xgb.DMatrix(scaled_row))
-
-        if predictions.shape != (1,):
-            raise ValueError("Expected one model score.")
-
-        score = float(predictions[0])
-        if not isfinite(score) or not 0 <= score <= 1:
-            raise ValueError("Model score is outside the expected range.")
-    except Exception:
-        app.logger.exception("Diagnostic model could not run")
-        return jsonify(
-            status="error",
-            message="The model could not run. Check the Flask terminal for details.",
-        ), 500
-
-    return jsonify(
-        status="success",
-        model_name="Dementia-related classifier",
-        score=score,
-    )
-
+    return run_screening(mysql)
 
 @app.route("/upload_mri", methods=["POST"])
 def upload_mri():
@@ -823,6 +1030,14 @@ def add_patient():
             blood_type,
             password
         ))
+        new_patient_id = cur.lastrowid
+        cur.execute(
+            """
+            INSERT INTO doctor_patient_access (doctor_id, patient_id)
+            VALUES (%s, %s)
+            """,
+            (session["doctor_id"], new_patient_id),
+        )
         mysql.connection.commit()
 
         return redirect(url_for("doctor_patients"))

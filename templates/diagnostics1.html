@@ -1,0 +1,567 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Diagnostics - NeuroSense</title>
+
+    <style>
+        :root {
+            --blue: #2563eb;
+            --blue-dark: #1d4ed8;
+            --ink: #172443;
+            --muted: #52627a;
+            --line: #dce4f0;
+            --surface: #fff;
+            --soft-blue: #edf3ff;
+        }
+
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+        }
+
+        [hidden] {
+            display: none !important;
+        }
+
+        body {
+            margin: 0;
+            background: #f6f7fb;
+            color: var(--ink);
+            font: 16px/1.55 system-ui, sans-serif;
+        }
+
+        :focus-visible {
+            outline: 3px solid var(--blue);
+            outline-offset: 3px;
+        }
+
+        .topbar {
+            background: var(--surface);
+            border-bottom: 1px solid var(--line);
+        }
+
+        .nav-shell {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            align-items: center;
+            gap: 10px 24px;
+            max-width: 1280px;
+            margin: auto;
+            padding: 14px 24px;
+        }
+
+        .brand,
+        .nav-links a,
+        .button {
+            display: inline-flex;
+            align-items: center;
+            min-height: 44px;
+            text-decoration: none;
+        }
+
+        .brand {
+            gap: 10px;
+            color: var(--ink);
+            font-size: 21px;
+            font-weight: 750;
+        }
+
+        .brand img {
+            width: 36px;
+            height: 36px;
+            object-fit: contain;
+        }
+
+        .nav-links {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+        }
+
+        .nav-links a {
+            padding: 6px 12px;
+            border-radius: 9px;
+            color: var(--muted);
+            font-size: 14px;
+            font-weight: 650;
+        }
+
+        .nav-links a:hover,
+        .nav-links a[aria-current="page"] {
+            background: var(--soft-blue);
+            color: var(--blue-dark);
+        }
+
+        .nav-links .logout {
+            color: #b91c1c;
+        }
+
+        .page {
+            width: min(1120px, calc(100% - 32px));
+            margin: 32px auto 56px;
+        }
+
+        .hero {
+            padding: clamp(24px, 5vw, 40px);
+            border-radius: 20px;
+            background:
+                radial-gradient(ellipse at top right, #3067d3, transparent 62%),
+                linear-gradient(125deg, #173ba3, #1d4ed8);
+            color: #fff;
+            box-shadow: 0 12px 30px rgb(29 78 216 / 16%);
+        }
+
+        .hero h1 {
+            margin: 0 0 6px;
+            font-size: clamp(28px, 5vw, 42px);
+            line-height: 1.15;
+            letter-spacing: -.035em;
+        }
+
+        .hero p {
+            margin: 0;
+        }
+
+        .workspace {
+            display: grid;
+            grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr);
+            align-items: start;
+            gap: 16px;
+            margin-top: 20px;
+        }
+
+        .panel {
+            min-width: 0;
+            padding: clamp(18px, 3vw, 26px);
+            border: 1px solid var(--line);
+            border-radius: 16px;
+            background: var(--surface);
+            box-shadow: 0 8px 22px rgb(23 36 67 / 5%);
+        }
+
+        .panel h2 {
+            margin: 0 0 12px;
+            font-size: 21px;
+        }
+
+        .panel p {
+            margin: 0 0 14px;
+            color: var(--muted);
+        }
+
+        .result,
+        .empty {
+            margin-top: 16px;
+        }
+
+        .fields {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 14px;
+            min-width: 0;
+            margin: 0;
+            padding: 0;
+            border: 0;
+        }
+
+        .wide {
+            grid-column: 1 / -1;
+        }
+
+        .field label {
+            display: block;
+            margin-bottom: 5px;
+            font-size: 14px;
+            font-weight: 700;
+        }
+
+        .field input,
+        .field select {
+            display: block;
+            width: 100%;
+            min-height: 46px;
+            padding: 9px 12px;
+            border: 1px solid #a9b7cc;
+            border-radius: 10px;
+            background: var(--surface);
+            color: var(--ink);
+            font: inherit;
+        }
+
+        .actions {
+            display: flex;
+            justify-content: flex-end;
+            margin-top: 18px;
+        }
+
+        .button {
+            justify-content: center;
+            padding: 10px 16px;
+            border: 0;
+            border-radius: 10px;
+            background: var(--blue-dark);
+            color: #fff;
+            font: inherit;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        .button:hover {
+            background: #1e40af;
+        }
+
+        .button:disabled {
+            opacity: .65;
+            cursor: default;
+        }
+
+        .summary {
+            display: grid;
+            gap: 8px;
+            margin: 0;
+        }
+
+        .summary>div {
+            padding: 10px 12px;
+            border-radius: 10px;
+            background: #f5f8fd;
+        }
+
+        .summary dt {
+            color: var(--muted);
+            font-size: 13px;
+        }
+
+        .summary dd {
+            margin: 3px 0 0;
+            overflow-wrap: anywhere;
+        }
+
+        .notice:not(:empty) {
+            margin-top: 16px;
+            padding: 11px 13px;
+            border: 1px solid var(--line);
+            border-left-width: 4px;
+            border-radius: 10px;
+            background: var(--soft-blue);
+        }
+
+        .notice[data-state="success"]:not(:empty) {
+            border-color: #22c55e;
+            background: #f0fdf4;
+            color: #166534;
+        }
+
+        .notice[data-state="error"]:not(:empty) {
+            border-color: #ef4444;
+            background: #fef2f2;
+            color: #991b1b;
+        }
+
+        @media (max-width: 760px) {
+            .page {
+                margin-top: 20px;
+            }
+
+            .workspace {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .nav-shell {
+                padding-inline: 16px;
+            }
+
+            .fields {
+                grid-template-columns: 1fr;
+            }
+
+            .actions .button {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <header class="topbar">
+        <div class="nav-shell">
+            <a class="brand" href="{{ url_for('doctor_dashboard') }}" aria-label="NeuroSense doctor dashboard">
+                <img src="{{ url_for('static', filename='logo.png') }}" alt="">
+                <span>NeuroSense</span>
+            </a>
+
+            <nav class="nav-links" aria-label="Doctor navigation">
+                <a href="{{ url_for('doctor_dashboard') }}">Dashboard</a>
+                <a href="{{ url_for('doctor_patients') }}">Patient Management</a>
+                <a href="{{ url_for('doctor_diagnostics_page') }}" aria-current="page">
+                    Diagnostics
+                </a>
+                <a href="{{ url_for('doctor_interventions') }}">Interventions</a>
+                <a class="logout" href="{{ url_for('logout') }}">Log out</a>
+            </nav>
+        </div>
+    </header>
+
+    <main class="page">
+        <header class="hero">
+            <h1>Diagnostics</h1>
+            <p>Review a saved assessment and generate a research model report.</p>
+        </header>
+
+        {% if patients %}
+        <div class="workspace">
+            <section class="panel" aria-labelledby="inputs-heading">
+                <h2 id="inputs-heading">Model inputs</h2>
+                <p id="input-help">
+                    Use all seven values from a de-identified OASIS research example,
+                    in the dataset’s original units.
+                </p>
+
+                <form id="diagnostics-form" method="post" action="{{ url_for('run_diagnostics') }}"
+                    aria-describedby="input-help">
+                    <fieldset class="fields" id="clinical-fields" aria-labelledby="inputs-heading">
+                        <div class="field wide">
+                            <label for="patient-id">Patient</label>
+                            <select id="patient-id" name="patient_id" required>
+                                <option value="" selected disabled>Select a patient</option>
+                                {% for patient in patients %}
+                                <option value="{{ patient.id }}"
+                                    data-assessment-url="{{ url_for('get_latest_assessment', patient_id=patient.id) }}">
+                                    {{ patient.full_name }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        {% for name, label in [
+                        ("Age", "Age"),
+                        ("SES", "SES code"),
+                        ("MMSE", "MMSE score (0–30)"),
+                        ("eTIV", "Estimated total intracranial volume (eTIV)"),
+                        ("nWBV", "Normalised whole-brain volume (nWBV)"),
+                        ("ASF", "Atlas scaling factor (ASF)")
+                        ] %}
+                        <div class="field">
+                            <label for="diagnostic-{{ name }}">{{ label }}</label>
+                            <input id="diagnostic-{{ name }}" name="{{ name }}" type="number" step="any" {% if
+                                name=="MMSE" %}min="0" max="30" {% endif %} required>
+                        </div>
+                        {% endfor %}
+
+                        <div class="field">
+                            <label for="diagnostic-sex">Sex (training code)</label>
+                            <select id="diagnostic-sex" name="Sex" required>
+                                <option value="" selected disabled>Select a code</option>
+                                <option value="0">F (0)</option>
+                                <option value="1">M (1)</option>
+                            </select>
+                        </div>
+                    </fieldset>
+
+                    <div class="actions">
+                        <button class="button" id="run-button" type="submit" disabled>
+                            Generate report
+                        </button>
+                    </div>
+
+                    <noscript>
+                        <p>Enable JavaScript to generate the report.</p>
+                    </noscript>
+                </form>
+
+                <div class="notice" id="report-status" role="status"></div>
+            </section>
+
+            <section class="panel" aria-labelledby="assessment-heading">
+                <h2 id="assessment-heading">Latest saved assessment</h2>
+                <p id="assessment-status" role="status">
+                    Select a patient to see their latest saved assessment.
+                </p>
+                <dl class="summary" id="assessment-summary" hidden></dl>
+            </section>
+        </div>
+
+        <section class="panel result" id="report-output" aria-labelledby="report-heading" hidden>
+            <h2 id="report-heading">Generated model report</h2>
+            <p>Research output for the dementia-related label used in training.</p>
+            <dl class="summary" id="report-summary"></dl>
+        </section>
+        {% else %}
+        <section class="panel empty" aria-labelledby="empty-heading">
+            <h2 id="empty-heading">No patients available</h2>
+            <p>Add a patient to the roster to use the Diagnostics page.</p>
+            <a class="button" href="{{ url_for('add_patient') }}">Add new patient</a>
+        </section>
+        {% endif %}
+    </main>
+
+    {% if patients %}
+    <script>
+        const form = document.getElementById("diagnostics-form");
+        const fields = document.getElementById("clinical-fields");
+        const patientSelect = document.getElementById("patient-id");
+        const runButton = document.getElementById("run-button");
+        const assessmentStatus = document.getElementById("assessment-status");
+        const assessmentSummary = document.getElementById("assessment-summary");
+        const reportStatus = document.getElementById("report-status");
+        const reportOutput = document.getElementById("report-output");
+        const reportSummary = document.getElementById("report-summary");
+        let assessmentRequest;
+
+        function renderSummary(container, entries) {
+            container.replaceChildren();
+
+            for (const [label, value] of entries) {
+                const row = document.createElement("div");
+                const term = document.createElement("dt");
+                const description = document.createElement("dd");
+                const text = Array.isArray(value) ? value.join(", ") : value;
+
+                term.textContent = label;
+                description.textContent = text == null || text === ""
+                    ? "Not recorded"
+                    : String(text);
+
+                row.append(term, description);
+                container.append(row);
+            }
+        }
+
+        function setStatus(message, state = "") {
+            reportStatus.dataset.state = state;
+            reportStatus.textContent = message;
+        }
+
+        async function loadAssessment() {
+            assessmentRequest?.abort();
+            assessmentSummary.hidden = true;
+            assessmentSummary.replaceChildren();
+
+            const url = patientSelect.selectedOptions[0]?.dataset.assessmentUrl;
+
+            if (!url) {
+                assessmentStatus.textContent =
+                    "Select a patient to see their latest saved assessment.";
+                return;
+            }
+
+            const controller = new AbortController();
+            assessmentRequest = controller;
+            assessmentStatus.textContent = "Loading saved assessment…";
+
+            try {
+                const response = await fetch(url, { signal: controller.signal });
+                if (!response.ok) throw new Error();
+
+                const data = await response.json();
+                if (controller.signal.aborted) return;
+
+                if (data.status === "empty") {
+                    assessmentStatus.textContent =
+                        "No assessment has been saved for this patient.";
+                    return;
+                }
+
+                if (data.status !== "success") throw new Error();
+
+                renderSummary(assessmentSummary, [
+                    ["Saved primary label", data.primary_diagnosis],
+                    ["Saved confidence value", data.diagnosis_confidence],
+                    ["Saved secondary labels", data.secondary_diagnoses],
+                    ["Saved findings", data.key_findings],
+                    ["Saved recommendations", data.recommendations]
+                ]);
+
+                assessmentStatus.textContent = "";
+                assessmentSummary.hidden = false;
+            } catch {
+                if (!controller.signal.aborted) {
+                    assessmentStatus.textContent =
+                        "The saved assessment couldn’t be loaded.";
+                }
+            }
+        }
+
+        patientSelect.addEventListener("change", () => {
+            for (const field of fields.querySelectorAll("input, select")) {
+                if (field !== patientSelect) field.value = "";
+            }
+
+            reportOutput.hidden = true;
+            reportSummary.replaceChildren();
+            setStatus("");
+            loadAssessment();
+        });
+
+        form.addEventListener("submit", async (event) => {
+            event.preventDefault();
+            if (runButton.disabled) return;
+
+            // Read the form before disabling the fieldset.
+            const payload = Object.fromEntries(new FormData(form));
+
+            fields.disabled = true;
+            runButton.disabled = true;
+            runButton.textContent = "Generating…";
+            reportOutput.hidden = true;
+            reportSummary.replaceChildren();
+            setStatus("Generating report…");
+
+            try {
+                const response = await fetch(form.action, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(payload)
+                });
+
+                const data = await response.json();
+
+                if (!response.ok || data.status !== "success") {
+                    setStatus(
+                        data.message || "The report couldn’t be generated.",
+                        "error"
+                    );
+                    return;
+                }
+
+                if (!Number.isFinite(data.score) || data.score < 0 || data.score > 1) {
+                    setStatus(
+                        "The server didn’t return a valid model score. Check the updated Flask route.",
+                        "error"
+                    );
+                    return;
+                }
+
+                renderSummary(reportSummary, [
+                    ["Model", data.model_name],
+                    ["Positive-class score (0–1)", data.score.toFixed(4)]
+                ]);
+
+                reportOutput.hidden = false;
+                setStatus("Model report generated.", "success");
+            } catch {
+                setStatus(
+                    "Couldn’t read the server response. Check the Flask terminal.",
+                    "error"
+                );
+            } finally {
+                fields.disabled = false;
+                runButton.disabled = false;
+                runButton.textContent = "Generate report";
+            }
+        });
+
+        runButton.disabled = false;
+        loadAssessment();
+    </script>
+    {% endif %}
+</body>
+
+</html>

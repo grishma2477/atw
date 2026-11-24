@@ -8,13 +8,12 @@
 
     <style>
         :root {
-            --blue: #2563eb;
-            --blue-dark: #1d4ed8;
             --ink: #172443;
             --muted: #52627a;
+            --blue: #2563eb;
+            --blue-dark: #1d4ed8;
             --line: #dce4f0;
-            --surface: #fff;
-            --soft-blue: #edf3ff;
+            --light-blue: #edf3ff;
         }
 
         *,
@@ -40,15 +39,15 @@
         }
 
         .topbar {
-            background: var(--surface);
+            background: #fff;
             border-bottom: 1px solid var(--line);
         }
 
         .nav-shell {
             display: flex;
             flex-wrap: wrap;
-            justify-content: space-between;
             align-items: center;
+            justify-content: space-between;
             gap: 10px 24px;
             max-width: 1280px;
             margin: auto;
@@ -56,7 +55,7 @@
         }
 
         .brand,
-        .nav-links a,
+        .links a,
         .button {
             display: inline-flex;
             align-items: center;
@@ -77,13 +76,13 @@
             object-fit: contain;
         }
 
-        .nav-links {
+        .links {
             display: flex;
             flex-wrap: wrap;
             gap: 4px;
         }
 
-        .nav-links a {
+        .links a {
             padding: 6px 12px;
             border-radius: 9px;
             color: var(--muted);
@@ -91,13 +90,13 @@
             font-weight: 650;
         }
 
-        .nav-links a:hover,
-        .nav-links a[aria-current="page"] {
-            background: var(--soft-blue);
+        .links a:hover,
+        .links a[aria-current="page"] {
+            background: var(--light-blue);
             color: var(--blue-dark);
         }
 
-        .nav-links .logout {
+        .links .logout {
             color: #b91c1c;
         }
 
@@ -129,7 +128,7 @@
 
         .workspace {
             display: grid;
-            grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr);
+            grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr);
             align-items: start;
             gap: 16px;
             margin-top: 20px;
@@ -137,15 +136,15 @@
 
         .panel {
             min-width: 0;
-            padding: clamp(18px, 3vw, 26px);
+            padding: clamp(17px, 3vw, 26px);
             border: 1px solid var(--line);
             border-radius: 16px;
-            background: var(--surface);
+            background: #fff;
             box-shadow: 0 8px 22px rgb(23 36 67 / 5%);
         }
 
         .panel h2 {
-            margin: 0 0 12px;
+            margin: 0 0 14px;
             font-size: 21px;
         }
 
@@ -154,7 +153,7 @@
             color: var(--muted);
         }
 
-        .result,
+        .report,
         .empty {
             margin-top: 16px;
         }
@@ -182,15 +181,19 @@
 
         .field input,
         .field select {
-            display: block;
             width: 100%;
             min-height: 46px;
             padding: 9px 12px;
             border: 1px solid #a9b7cc;
             border-radius: 10px;
-            background: var(--surface);
+            background: #fff;
             color: var(--ink);
             font: inherit;
+        }
+
+        .optional {
+            color: var(--muted);
+            font-weight: 500;
         }
 
         .actions {
@@ -226,7 +229,7 @@
             margin: 0;
         }
 
-        .summary>div {
+        .summary div {
             padding: 10px 12px;
             border-radius: 10px;
             background: #f5f8fd;
@@ -242,38 +245,42 @@
             overflow-wrap: anywhere;
         }
 
-        .notice:not(:empty) {
+        .notice {
             margin-top: 16px;
             padding: 11px 13px;
             border: 1px solid var(--line);
             border-left-width: 4px;
             border-radius: 10px;
-            background: var(--soft-blue);
+            background: var(--light-blue);
         }
 
-        .notice[data-state="success"]:not(:empty) {
+        .notice:empty {
+            display: none;
+        }
+
+        .notice[data-state="success"] {
             border-color: #22c55e;
             background: #f0fdf4;
             color: #166534;
         }
 
-        .notice[data-state="error"]:not(:empty) {
+        .notice[data-state="error"] {
             border-color: #ef4444;
             background: #fef2f2;
             color: #991b1b;
         }
 
         @media (max-width: 760px) {
-            .page {
-                margin-top: 20px;
-            }
-
             .workspace {
                 grid-template-columns: 1fr;
             }
+
+            .page {
+                margin-top: 20px;
+            }
         }
 
-        @media (max-width: 480px) {
+        @media (max-width: 460px) {
             .nav-shell {
                 padding-inline: 16px;
             }
@@ -297,7 +304,7 @@
                 <span>NeuroSense</span>
             </a>
 
-            <nav class="nav-links" aria-label="Doctor navigation">
+            <nav class="links" aria-label="Doctor navigation">
                 <a href="{{ url_for('doctor_dashboard') }}">Dashboard</a>
                 <a href="{{ url_for('doctor_patients') }}">Patient Management</a>
                 <a href="{{ url_for('doctor_diagnostics_page') }}" aria-current="page">
@@ -312,21 +319,16 @@
     <main class="page">
         <header class="hero">
             <h1>Diagnostics</h1>
-            <p>Review a saved assessment and generate a research model report.</p>
+            <p>Review saved assessments and generate a screening report from a de-identified research example.</p>
         </header>
 
         {% if patients %}
         <div class="workspace">
-            <section class="panel" aria-labelledby="inputs-heading">
-                <h2 id="inputs-heading">Model inputs</h2>
-                <p id="input-help">
-                    Use all seven values from a de-identified OASIS research example,
-                    in the dataset’s original units.
-                </p>
+            <section class="panel" aria-labelledby="clinical-heading">
+                <h2 id="clinical-heading">Clinical data</h2>
 
-                <form id="diagnostics-form" method="post" action="{{ url_for('run_diagnostics') }}"
-                    aria-describedby="input-help">
-                    <fieldset class="fields" id="clinical-fields" aria-labelledby="inputs-heading">
+                <form id="diagnostics-form" method="post" action="{{ url_for('run_diagnostics') }}">
+                    <fieldset class="fields" id="clinical-fields" aria-labelledby="clinical-heading">
                         <div class="field wide">
                             <label for="patient-id">Patient</label>
                             <select id="patient-id" name="patient_id" required>
@@ -339,30 +341,75 @@
                                 {% endfor %}
                             </select>
                         </div>
+<p class="wide" id="oasis-input-guide">
+    For the demo, select a synthetic patient and enter the original values
+    from one complete, de-identified OASIS test record.
+    NeuroSense applies scaling after submission.
+</p>
 
-                        {% for name, label in [
-                        ("Age", "Age"),
-                        ("SES", "SES code"),
-                        ("MMSE", "MMSE score (0–30)"),
-                        ("eTIV", "Estimated total intracranial volume (eTIV)"),
-                        ("nWBV", "Normalised whole-brain volume (nWBV)"),
-                        ("ASF", "Atlas scaling factor (ASF)")
-                        ] %}
-                        <div class="field">
-                            <label for="diagnostic-{{ name }}">{{ label }}</label>
-                            <input id="diagnostic-{{ name }}" name="{{ name }}" type="number" step="any" {% if
-                                name=="MMSE" %}min="0" max="30" {% endif %} required>
-                        </div>
-                        {% endfor %}
+{% for key, label, help_text, minimum, maximum, step in [
+(
+"Age",
+"Age at assessment (Age) (years)",
+"Use the age recorded at the same visit as the other measurements.",
+0, none, 1
+),
+(
+"SES",
+"Socioeconomic status (SES) (1–5)",
+"Copy the OASIS code from the research record. Code 1 is the highest status and code 5 is the lowest.",
+1, 5, 1
+),
+(
+"MMSE",
+"Mini-Mental State Examination (MMSE) (0–30)",
+"Enter the documented MMSE total for this visit.",
+0, 30, 1
+),
+(
+"eTIV",
+"Estimated total intracranial volume (eTIV) (OASIS source units)",
+"Copy the value from the OASIS record or a compatible MRI processing report.",
+none, none, "any"
+),
+(
+"nWBV",
+"Normalised whole-brain volume (nWBV) (0–1 fraction)",
+"Copy the fraction from the MRI processing output, for example 0.736.",
+0, 1, "any"
+),
+(
+"ASF",
+"Atlas scaling factor (ASF) (unitless)",
+"Copy the atlas scaling factor from the same MRI processing output.",
+none, none, "any"
+)
+] %}
+<div class="field">
+    <label for="input-{{ key }}">{{ label }}</label>
 
-                        <div class="field">
-                            <label for="diagnostic-sex">Sex (training code)</label>
-                            <select id="diagnostic-sex" name="Sex" required>
-                                <option value="" selected disabled>Select a code</option>
-                                <option value="0">F (0)</option>
-                                <option value="1">M (1)</option>
-                            </select>
-                        </div>
+    <input id="input-{{ key }}" name="{{ key }}" type="number" step="{{ step }}" {% if minimum is not none
+        %}min="{{ minimum }}" {% endif %} {% if maximum is not none %}max="{{ maximum }}" {% endif %}
+        aria-describedby="help-{{ key }}" required>
+
+    <small id="help-{{ key }}">{{ help_text }}</small>
+</div>
+{% endfor %}
+
+<div class="field">
+    <label for="sex-code">Recorded sex (Sex) (F or M)</label>
+
+    <select name="Sex" id="sex-code" aria-describedby="help-sex" required>
+        <option value="" selected disabled>Select recorded category</option>
+        <option value="0">F</option>
+        <option value="1">M</option>
+    </select>
+
+    <small id="help-sex">
+        Use the category recorded in the OASIS data.
+        NeuroSense sends the matching training code.
+    </small>
+</div>
                     </fieldset>
 
                     <div class="actions">
@@ -372,7 +419,7 @@
                     </div>
 
                     <noscript>
-                        <p>Enable JavaScript to generate the report.</p>
+                        <p>Enable JavaScript to generate a report.</p>
                     </noscript>
                 </form>
 
@@ -382,21 +429,21 @@
             <section class="panel" aria-labelledby="assessment-heading">
                 <h2 id="assessment-heading">Latest saved assessment</h2>
                 <p id="assessment-status" role="status">
-                    Select a patient to see their latest saved assessment.
+                    Select a patient to see their recorded assessment.
                 </p>
                 <dl class="summary" id="assessment-summary" hidden></dl>
             </section>
         </div>
 
-        <section class="panel result" id="report-output" aria-labelledby="report-heading" hidden>
-            <h2 id="report-heading">Generated model report</h2>
-            <p>Research output for the dementia-related label used in training.</p>
+        <section class="panel report" id="report-output" aria-labelledby="report-heading" hidden>
+            <h2 id="report-heading">Generated report</h2>
+            <p>Research and questionnaire outputs use different scales. Score bands are prototype thresholds.</p>
             <dl class="summary" id="report-summary"></dl>
         </section>
         {% else %}
         <section class="panel empty" aria-labelledby="empty-heading">
             <h2 id="empty-heading">No patients available</h2>
-            <p>Add a patient to the roster to use the Diagnostics page.</p>
+            <p>Add a patient before generating a report.</p>
             <a class="button" href="{{ url_for('add_patient') }}">Add new patient</a>
         </section>
         {% endif %}
@@ -406,7 +453,7 @@
     <script>
         const form = document.getElementById("diagnostics-form");
         const fields = document.getElementById("clinical-fields");
-        const patientSelect = document.getElementById("patient-id");
+        const patient = document.getElementById("patient-id");
         const runButton = document.getElementById("run-button");
         const assessmentStatus = document.getElementById("assessment-status");
         const assessmentSummary = document.getElementById("assessment-summary");
@@ -419,24 +466,24 @@
             container.replaceChildren();
 
             for (const [label, value] of entries) {
-                const row = document.createElement("div");
+                const item = document.createElement("div");
                 const term = document.createElement("dt");
                 const description = document.createElement("dd");
-                const text = Array.isArray(value) ? value.join(", ") : value;
+                const displayValue = Array.isArray(value) ? value.join(", ") : value;
 
                 term.textContent = label;
-                description.textContent = text == null || text === ""
+                description.textContent = displayValue == null || displayValue === ""
                     ? "Not recorded"
-                    : String(text);
+                    : String(displayValue);
 
-                row.append(term, description);
-                container.append(row);
+                item.append(term, description);
+                container.append(item);
             }
         }
 
         function setStatus(message, state = "") {
-            reportStatus.dataset.state = state;
             reportStatus.textContent = message;
+            reportStatus.dataset.state = state;
         }
 
         async function loadAssessment() {
@@ -444,17 +491,17 @@
             assessmentSummary.hidden = true;
             assessmentSummary.replaceChildren();
 
-            const url = patientSelect.selectedOptions[0]?.dataset.assessmentUrl;
+            const url = patient.selectedOptions[0]?.dataset.assessmentUrl;
 
             if (!url) {
                 assessmentStatus.textContent =
-                    "Select a patient to see their latest saved assessment.";
+                    "Select a patient to see their recorded assessment.";
                 return;
             }
 
             const controller = new AbortController();
             assessmentRequest = controller;
-            assessmentStatus.textContent = "Loading saved assessment…";
+            assessmentStatus.textContent = "Loading assessment…";
 
             try {
                 const response = await fetch(url, { signal: controller.signal });
@@ -489,9 +536,10 @@
             }
         }
 
-        patientSelect.addEventListener("change", () => {
+        patient.addEventListener("change", () => {
+            // Clear clinical inputs and reports that belong to the previous patient.
             for (const field of fields.querySelectorAll("input, select")) {
-                if (field !== patientSelect) field.value = "";
+                if (field !== patient) field.value = "";
             }
 
             reportOutput.hidden = true;
@@ -504,14 +552,13 @@
             event.preventDefault();
             if (runButton.disabled) return;
 
-            // Read the form before disabling the fieldset.
             const payload = Object.fromEntries(new FormData(form));
+            payload.patient_id = Number(payload.patient_id);
 
             fields.disabled = true;
             runButton.disabled = true;
             runButton.textContent = "Generating…";
             reportOutput.hidden = true;
-            reportSummary.replaceChildren();
             setStatus("Generating report…");
 
             try {
@@ -523,34 +570,31 @@
 
                 const data = await response.json();
 
-                if (!response.ok || data.status !== "success") {
-                    setStatus(
-                        data.message || "The report couldn’t be generated.",
-                        "error"
-                    );
+                if (!response.ok || data.status !== "success" || data.report_id == null) {
+                    setStatus(data.message || "The report couldn’t be generated.", "error");
                     return;
                 }
 
-                if (!Number.isFinite(data.score) || data.score < 0 || data.score > 1) {
-                    setStatus(
-                        "The server didn’t return a valid model score. Check the updated Flask route.",
-                        "error"
+                const entries = [
+                    ["Report ID", data.report_id],
+                    ["Source", data.source]
+                ];
+
+                if (Number.isFinite(data.score)) {
+                    entries.push(
+                        ["OASIS research score", data.score.toFixed(2) + "%"],
+                        ["Prototype score band", data.prototype_band]
                     );
-                    return;
+                } else {
+                    entries.push(["Questionnaire points", data.questionnaire_points]);
                 }
 
-                renderSummary(reportSummary, [
-                    ["Model", data.model_name],
-                    ["Positive-class score (0–1)", data.score.toFixed(4)]
-                ]);
+                renderSummary(reportSummary, entries);
 
                 reportOutput.hidden = false;
-                setStatus("Model report generated.", "success");
+                setStatus("Report generated and saved.", "success");
             } catch {
-                setStatus(
-                    "Couldn’t read the server response. Check the Flask terminal.",
-                    "error"
-                );
+                setStatus("Couldn’t read the server response. Check the Flask terminal.", "error");
             } finally {
                 fields.disabled = false;
                 runButton.disabled = false;

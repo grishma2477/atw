@@ -310,6 +310,19 @@
             color: var(--muted);
         }
 
+        .patient-card-heading {
+    grid-column: 1 / -1;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px 16px;
+}
+
+.patient-details {
+    grid-column: 1 / -1;
+}
+
         @media (max-width: 700px) {
             .page {
                 margin-top: 20px;
@@ -340,6 +353,7 @@
             .patient-email {
                 grid-column: 1 / -1;
             }
+
         }
     </style>
 </head>
@@ -407,7 +421,14 @@
             <ul class="patient-list">
                 {% for patient in roster %}
                 <li class="patient-card">
-                    <h3>{{ patient.full_name or "Name not recorded" }}</h3>
+                    <div class="patient-card-heading">
+                        <h3>{{ patient.full_name or "Name not recorded" }}</h3>
+                    
+                        <a class="button button-secondary" href="{{ url_for('doctor_patient_detail', patient_id=patient.id) }}"
+                            aria-label="View profile for {{ patient.full_name or ('patient ' ~ patient.id) }}">
+                            View profile <span aria-hidden="true">→</span>
+                        </a>
+                    </div>
 
                     <dl class="patient-details">
                         <div class="patient-email">

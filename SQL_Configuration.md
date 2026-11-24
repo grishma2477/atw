@@ -69,7 +69,7 @@ CREATE TABLE diagnostic_reports (
 CREATE TABLE health_events (
     id INT PRIMARY KEY AUTO_INCREMENT,
     patient_id INT NOT NULL,
-    event_type ENUM('diagnosis', 'intervention', 'medication', 'assessment'),
+    event_type ENUM('diagnosis', 'intervention', 'medication', 'assessment', 'screening'),
     title VARCHAR(255),
     description LONGTEXT,
     severity ENUM('low', 'moderate', 'high'),
@@ -77,6 +77,22 @@ CREATE TABLE health_events (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (patient_id) REFERENCES patients(id)
 );
+
+CREATE TABLE IF NOT EXISTS doctor_patient_access (
+    doctor_id BIGINT UNSIGNED NOT NULL,
+    patient_id BIGINT UNSIGNED NOT NULL,
+    PRIMARY KEY (doctor_id, patient_id)
+);
+
+CREATE TABLE IF NOT EXISTS screening_reports (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    patient_id BIGINT UNSIGNED NOT NULL,
+    doctor_id BIGINT UNSIGNED NOT NULL,
+    result_json JSON NOT NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    INDEX screening_patient_history (patient_id, created_at)
+);
+
 
 CREATE TABLE audit_log (
     id INT PRIMARY KEY AUTO_INCREMENT,

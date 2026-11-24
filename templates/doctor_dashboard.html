@@ -365,9 +365,9 @@
                 <ul class="record-list">
                     {% for patient in patients %}
                     <li class="record-row">
-                        <span class="record-name">
+                        <a class="record-name panel-link" href="{{ url_for('doctor_patient_detail', patient_id=patient.id) }}">
                             {{ patient.full_name or "Name not recorded" }}
-                        </span>
+                        </a>
                         <span class="record-meta">
                             {% if patient.age is defined and patient.age is not none and patient.age != "" %}
                             {{ patient.age }} yrs

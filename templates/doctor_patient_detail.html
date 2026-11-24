@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Patient details - NeuroSense</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/patient_portal.css') }}">
+    <style>
+        .patient-record {
+            margin-top: 20px;
+        }
+
+        .patient-record dd {
+            margin: 0;
+            overflow-wrap: anywhere;
+        }
+
+        .patient-record dt {
+            font-weight: 700;
+        }
+
+        .patient-record details {
+            margin-top: 12px;
+            padding: 12px 14px;
+            border: 1px solid #dce4f0;
+            border-radius: 10px;
+            background: #f5f8ff;
+        }
+
+        .patient-record summary {
+            color: #1d4ed8;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        .event-note {
+            white-space: pre-wrap;
+            overflow-wrap: anywhere;
+        }
+    </style>
+</head>
+
+<body>
+    <header class="portal-header">
+        <div class="nav-shell">
+            <a class="brand" href="{{ url_for('doctor_dashboard') }}">
+                <img src="{{ url_for('static', filename='logo.png') }}" alt="">
+                <span>NeuroSense</span>
+            </a>
+        </div>
+    </header>
+
+    <main class="portal-main">
+        <header class="portal-hero">
+            <h1>{{ patient.full_name or "Patient details" }}</h1>
+            <p>Patient record #{{ patient.id }}</p>
+        </header>
+
+        <section class="panel patient-record">
+            <h2>Profile</h2>
+            <dl class="field-grid">
+                {% for key, label in [
+                ("email", "Email"), ("phone", "Phone"),
+                ("age", "Age"), ("gender", "Gender"),
+                ("blood_type", "Blood type")
+                ] %}
+                <div>
+                    <dt>{{ label }}</dt>
+                    <dd>{{ patient[key] if patient[key] not in (none, "") else "Not recorded" }}</dd>
+                </div>
+                {% endfor %}
+            </dl>
+        </section>
+
+        <section class="panel patient-record">
+            <h2>Questionnaire history</h2>
+
+            {% for assessment in assessments %}
+            <details>
+                <summary>
+                    {{ assessment.created_at.strftime("%d %b %Y, %I:%M %p")
+                    if assessment.created_at else "Questionnaire submission" }}
+                </summary>
+
+                <dl class="field-grid">
+                    {% for key, answer in assessment.answers.items() %}
+                    <div>
+                        <dt>{{ key }}</dt>
+                        <dd>
+                            {% if answer is sequence
+                            and answer is not string
+                            and answer is not mapping %}
+                            {{ answer | join(", ") or "Not recorded" }}
+                            {% else %}
+                            {{ answer if answer not in (none, "") else "Not recorded" }}
+                            {% endif %}
+                        </dd>
+                    </div>
+                    {% else %}
+                    <div>
+                        <dt>Answers</dt>
+                        <dd>No questionnaire answers saved.</dd>
+                    </div>
+                    {% endfor %}
+                </dl>
+            </details>
+            {% else %}
+            <p>No questionnaires recorded.</p>
+            {% endfor %}
+        </section>
+
+        <section class="panel patient-record">
+            <h2>Screening reports</h2>
+
+            {% for report in screenings %}
+            <details>
+                <summary>
+                    Report #{{ report.id }}{% if report.badge %} · {{ report.badge }}{% endif %}
+                </summary>
+                {% if report.created_at %}
+                <p>{{ report.created_at.strftime("%d %b %Y, %I:%M %p") }}</p>
+                {% endif %}
+                <p>{{ report.explanation }}</p>
+            </details>
+            {% else %}
+            <p>No screening reports recorded.</p>
+            {% endfor %}
+        </section>
+
+        <section class="panel patient-record">
+            <h2>Health events</h2>
+
+            {% for event in events %}
+            <details>
+                <summary>{{ event.title or "Health event" }}</summary>
+                {% if event.created_at %}
+                <p>{{ event.created_at.strftime("%d %b %Y, %I:%M %p") }}</p>
+                {% endif %}
+                <p>{{ event.event_type | capitalize }}{% if event.disease %} · {{ event.disease }}{% endif %}</p>
+                <p class="event-note">{{ event.description or "No details recorded." }}</p>
+            </details>
+            {% else %}
+            <p>No health events recorded.</p>
+            {% endfor %}
+        </section>
+    </main>
+</body>
+
+</html>

@@ -13,7 +13,6 @@ Built as a comprehensive web-based application, NeuroSense bridges clinical expe
 
 The system is designed for deployment in clinical practices, research institutions, and telemedicine platforms, supporting both diagnostic accuracy and preventive care strategies.
 
-
 ---
 
 ## Key Features
@@ -490,7 +489,7 @@ cd NeuroSense
 #### 2. Create Virtual Environment
 ```bash
 python -m venv venv
-source venv/bin/activate      # On Windows: venv\Scripts\activate
+source venv/bin/activate      # On Windows: source venv\Scripts\activate
 ```
 
 #### 3. Install Dependencies
@@ -526,7 +525,7 @@ mkdir -p uploads/mri
 
 ### Configuration
 
-Update database credentials in `app.py`:
+Update database credentials in `app.py`(line 44 to 47):
 ```python
 app.config["MYSQL_HOST"] = "localhost"
 app.config["MYSQL_USER"] = "neurosense"
